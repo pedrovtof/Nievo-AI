@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-01 - [DOC] - Add symbolic link configuration and new skill registration guide to README
+
+Detalhes:
+
+- Document instructions for setting up symbolic links for AI directory and individual agent skills across platforms - pedrovotf - 2026-11-01 - N/A - PENDING
+- Add mandatory addendum explaining the requirement to create a new symbolic link whenever a new skill is added - pedrovotf - 2026-11-01 - N/A - PENDING
 2026-11-01 - [NEW] - Add git-push-request skill for automated sync, changelog conflict resolution, and PR briefing
 
 Detalhes:
