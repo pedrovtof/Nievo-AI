@@ -12,9 +12,12 @@ This skill defines the standard workflow for generating or extending **.NET Web 
 Controllers in NIEVO `.NET` backends are thin HTTP adapters: they handle routing, authorization attributes, OpenAPI metadata, claim/header extraction into Request DTOs, and delegate execution directly to an `I<Context>Service` method.
 
 > [!IMPORTANT]
-> **Mandatory Service Stub Rule (`NotImplementedException`)**:
-> Whenever a new endpoint establishes a link between a Controller and a Service (`I<Context>Service`), this skill **MUST** add the corresponding method signature to the Service interface AND create (if missing) or update the concrete Service class with a generic stub method that throws `new NotImplementedException();`.
-> Business logic implementation belongs exclusively to `dotnet-gen-service` ([dotnet-gen-service.md](./dotnet-gen-service.md)).
+> **Two Mandatory Rules**:
+> 1. **Mandatory Service Stub Rule (`NotImplementedException`)**:
+>    Whenever a new endpoint establishes a link between a Controller and a Service (`I<Context>Service`), this skill **MUST** add the corresponding method signature to the Service interface AND create (if missing) or update the concrete Service class with a generic stub method that throws `new NotImplementedException();`.
+>    Business logic implementation belongs exclusively to `dotnet-gen-service` ([dotnet-gen-service.md](./dotnet-gen-service.md)).
+> 2. **Mandatory Response Contract on Every Endpoint**:
+>    Every endpoint scaffolded by this skill **MUST ALWAYS** create a dedicated Response DTO contract in `Application/Interfaces/Response/<Verb><Action>Response.cs` (for data payloads, paginated item responses wrapped in `ResponsePaginationBase<<Verb><Action>Response>`, and confirmation/status endpoints alike). Never leave an endpoint without an explicit Response contract.
 
 ---
 
@@ -27,7 +30,7 @@ flowchart TD
     ask -->|"Yes"| clarify[/"Ask User for Missing Endpoint Specifications"/]
     clarify --> deps
     ask -->|"No"| deps["2. Check & Add Missing NuGet/Project Dependencies"]
-    deps --> contracts["3. Create Request/Response DTOs in Application/Interfaces"]
+    deps --> contracts["3. Create Request & Mandatory Response DTOs in Application/Interfaces"]
     contracts --> iface["4. Create or Update I<Context>Service Interface"]
     iface --> stub["5. Create or Update <Context>Service Stub (NotImplementedException)"]
     stub --> ctrl["6. Create or Update Controller in Target API Project"]
@@ -44,22 +47,90 @@ If any of the following are unclear from context, ask the user before scaffoldin
 - **Visibility Scope & API Version**: `Public`, `Private`, or `Admin`, and version segment (default `v1`).
 - **HTTP Verb & Route**: e.g., `[HttpGet("status")]`, `[HttpPost("")]`, `[HttpPatch("reset")]`.
 - **Authorization & Headers/Claims**: `[Authorize]` (requires `[FromHeader] string authorization` and JWT claim extraction via `JsonWebTokenService.GetClaimValue(authorization, "email")`) vs `[AllowAnonymous]` (optionally `[FromHeader(Name = "User-Agent")]` / `[FromHeader(Name = "Host")]`).
-- **Request & Response Shape**: Query/body fields, pagination (`PaginationRequestBase` or `PaginationClaimRequestBase`), or claim-only (`ClaimRequestBase`).
+- **Request & Response Shape**: Query/body fields, pagination (`PaginationRequestBase` or `PaginationClaimRequestBase`), or claim-only (`ClaimRequestBase`), plus expected response fields.
 
 ### Step 2: Dependencies & Packages
 - Verify whether the target `.csproj` already references `Application`, `Microsoft.AspNetCore.Authentication.JwtBearer`, `Swashbuckle.AspNetCore`, or any newly required dependency.
 - Add missing `<PackageReference>` or `<ProjectReference>` entries only when strictly required by the new endpoint.
 
-### Step 3: Create Contracts (`Request` & `Response`)
+### Step 3: Create Contracts (`Request` & Mandatory `Response`)
 1. **Request DTO** (`Application/Interfaces/Request/<Verb><Action>Request.cs`):
    - Inherit `ClaimRequestBase` when authenticated user email claim is injected by the controller.
    - Inherit `PaginationRequestBase` for paginated queries, or `PaginationClaimRequestBase` for authenticated paginated queries.
    - Annotate JSON properties with `[JsonPropertyName("snake_case")]` and query parameters with `[FromQuery(Name = "snake_case")]`.
    - Include XML summary documentation on class and properties.
-2. **Response DTO** (`Application/Interfaces/Response/<Verb><Action>Response.cs`):
-   - Create when the endpoint returns typed payload data or paginated results.
-   - Wrap paginated collections with `ResponsePaginationBase<T>`.
-   - Standardize API envelopes using `ResponseApiSucess` and `ResponseApiError` in `[ProducesResponseType]` attributes.
+2. **Mandatory Response DTO** (`Application/Interfaces/Response/<Verb><Action>Response.cs`):
+   - **ALWAYS** create `<Verb><Action>Response.cs` for **every** endpoint, regardless of HTTP verb or whether it returns domain data, a paginated list, or a status/confirmation message.
+   - Annotate all properties with `[JsonPropertyName("snake_case")]` and XML summary documentation.
+   - Standardize API envelopes using `ResponseApiSucess` and `ResponseApiError` in `[ProducesResponseType]` attributes, where `ResponseApiSucess.Data` holds `<Verb><Action>Response` (or `ResponsePaginationBase<<Verb><Action>Response>` for paginated endpoints).
+
+#### Typed Data / Paginated Response Example:
+```csharp
+using System.Text.Json.Serialization;
+using <RootNamespace>.Application.Data.Views;
+
+namespace <RootNamespace>.Application.Interfaces.Response;
+
+/// <summary>
+/// Response contract for <Verb><Action>.
+/// </summary>
+public class <Verb><Action>Response
+{
+    public <Verb><Action>Response() { }
+
+    public <Verb><Action>Response(<Domain>View view)
+    {
+        Id = view.Id;
+        Name = view.Name;
+    }
+
+    /// <summary>
+    /// Identifier
+    /// </summary>
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    /// <summary>
+    /// Name
+    /// </summary>
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+}
+```
+
+#### Confirmation / Status Response Example (carrying Enum ID + Message):
+```csharp
+using System.Text.Json.Serialization;
+using <RootNamespace>.Application.Extensions.Enum;
+
+namespace <RootNamespace>.Application.Interfaces.Response;
+
+/// <summary>
+/// Response contract for <Verb><Action> operation status.
+/// </summary>
+public class <Verb><Action>Response
+{
+    /// <summary>
+    /// Numeric identifier of the enum entry.
+    /// </summary>
+    [JsonPropertyName("code")]
+    public int Code { get; set; }
+
+    /// <summary>
+    /// Human-readable confirmation message.
+    /// </summary>
+    [JsonPropertyName("message")]
+    public string Message { get; set; }
+
+    public <Verb><Action>Response() { }
+
+    public <Verb><Action>Response(System.Enum enumValue)
+    {
+        Code = Convert.ToInt32(enumValue);
+        Message = enumValue.GetDescription();
+    }
+}
+```
 
 ### Step 4: Create or Update Service Interface
 Create (if missing) or update `Application/Interfaces/Services/I<Context>Service.cs` (or split `IPublic<Context>Service` / `IPrivate<Context>Service` when a domain separates public and private endpoints):
@@ -180,7 +251,7 @@ Run `dotnet build` against the backend solution/project and confirm zero build e
 
 ## 3. Next Workflow Steps
 
-- Implement the service business rules and validation using `dotnet-gen-service` ([dotnet-gen-service.md](./dotnet-gen-service.md)).
+- Implement the service business rules and validation using `dotnet-gen-service` ([dotnet-gen-service.md](./dotnet-gen-service.md)), which must strictly honor the generated `<Verb><Action>Response` contract.
 - Once both Controller and Service are implemented, generate controller and service tests using `dotnet-gen-test` ([dotnet-gen-test.md](./dotnet-gen-test.md)).
 - Update API sequence diagrams in documentation following [sequence-diagram.md](../../documentation/mermaid/sequence-diagram.md).
 
@@ -189,7 +260,7 @@ Run `dotnet build` against the backend solution/project and confirm zero build e
 ## 4. Verification Checklist
 
 - [ ] Controller placed in `<ApiProject>/Controllers/<Scope>/v1/<Context>Controller.cs` with `[ApiController]` and `[Route("api/<scope_lower>/v1/[controller]")]`.
-- [ ] Request and Response DTOs created/updated with XML doc comments and `[JsonPropertyName]` / `[FromQuery]` attributes.
+- [ ] Request DTO created/updated and dedicated Response contract (`Application/Interfaces/Response/<Verb><Action>Response.cs`) **always** created for the endpoint with XML doc comments and `[JsonPropertyName]` attributes.
 - [ ] Service interface `I<Context>Service` updated/created with matching async `Task<IActionResult>` signature.
 - [ ] Concrete `<Context>Service` stub created/updated throwing `NotImplementedException` (no business logic implemented here).
 - [ ] DI registration added to `Startup.cs` and any required NuGet/project references added.
