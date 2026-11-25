@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-25 - [CHG] - Update git-branch skill to restrict scope to branch creation with interactive naming confirmation
+
+Detalhes:
+
+- Restrict git-branch skill strictly to branch creation, forbidding git add, git commit, and git push operations - pedrovotf - 2026-11-25 - #6 - PENDING
+- Add interactive workflow to inspect local edits before asking for purpose, card, and board, and require user confirmation of the proposed branch name - pedrovotf - 2026-11-25 - #6 - PENDING
+
 2026-11-01 - [DOC] - Add symbolic link configuration and new skill registration guide to README
 
 Detalhes:
