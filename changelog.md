@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-25 - [NEW] - Add Python Alembic and .NET backend generation skills
+
+Detalhes:
+
+- Add python-alembic-gen-entity skill for interactive Alembic DDL generation with mandatory audit columns - pedrovotf - 2026-11-25 - #8 - PENDING
+- Add dotnet-gen-controller, dotnet-gen-service, dotnet-gen-entity, and dotnet-gen-test skills aligned with backend standards (including default active = true query filtering in dotnet-gen-entity) - pedrovotf - 2026-11-25 - #8 - PENDING
+- Register relative symbolic links for all five new skills under .agents/skills/ - pedrovotf - 2026-11-25 - #8 - PENDING
+
 2026-11-25 - [CHG] - Update git-branch skill to restrict scope to branch creation with interactive naming confirmation
 
 Detalhes:
