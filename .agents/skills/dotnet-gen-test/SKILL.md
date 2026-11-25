@@ -1,0 +1,1 @@
+../../../AI/GEMINI/skills/programming/dotnet/dotnet-gen-test.md
