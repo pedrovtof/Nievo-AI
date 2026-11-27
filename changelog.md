@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-27 - [DOC] - Add MCP Docker repository reference to README
+
+Detalhes:
+
+- Document MCP server Docker image repository (docker.io/pedrovotf/nievo_ai:latest) with pull, run, and client configuration instructions in README.md - pedrovotf - 2026-11-27 - N/A - PENDING
+
 2026-11-25 - [NEW] - Add Python Alembic and .NET backend generation skills
 
 Detalhes:
