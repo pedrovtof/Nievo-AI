@@ -203,16 +203,16 @@ To verify that all symbolic links are correctly configured and resolve without b
 
 To run the Nievo AI MCP server via Docker, use the official image repository:
 
-- **Image**: `docker.io/pedrovotf/nievo-ai:latest`
+- **Image**: `docker.io/pedrovotf/nievo_ai:latest`
 
 ### Pull & Run
 
 ```bash
 # Pull the latest image
-docker pull docker.io/pedrovotf/nievo-ai:latest
+docker pull docker.io/pedrovotf/nievo_ai:latest
 
 # Run the MCP server container (stdio)
-docker run -i --rm docker.io/pedrovotf/nievo-ai:latest
+docker run -i --rm docker.io/pedrovotf/nievo_ai:latest
 ```
 
 ### MCP Client Configuration
@@ -222,13 +222,13 @@ Add the following server entry to your MCP client configuration (`mcpServers`):
 ```json
 {
   "mcpServers": {
-    "nievo-ai": {
+    "nievo_ai": {
       "command": "docker",
       "args": [
         "run",
         "-i",
         "--rm",
-        "docker.io/pedrovotf/nievo-ai:latest"
+        "docker.io/pedrovotf/nievo_ai:latest"
       ]
     }
   }
