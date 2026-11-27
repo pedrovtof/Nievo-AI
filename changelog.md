@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-27 - [NEW] - Add Python Alembic skills for data inserts, indexes, and PK/FK keys
+
+Detalhes:
+
+- Add python-alembic-gen-insert skill for interactive Alembic seed/data insert migrations with audit column defaults and FK-aware downgrade cleanup - pedrovotf - 2026-11-27 - N/A - PENDING
+- Add python-alembic-gen-index skill for interactive Alembic standard, unique, composite, partial, and concurrent index migrations with schema-qualified drops - pedrovotf - 2026-11-27 - N/A - PENDING
+- Add python-alembic-gen-keys skill for interactive Alembic primary key and foreign key constraint migrations using idempotent pg_constraint guards - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic links for python-alembic-gen-insert, python-alembic-gen-index, and python-alembic-gen-keys under .agents/skills/ - pedrovotf - 2026-11-27 - N/A - PENDING
+
 2026-11-27 - [DOC] - Add MCP Docker repository reference to README
 
 Detalhes:

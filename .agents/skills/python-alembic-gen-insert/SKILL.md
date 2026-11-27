@@ -1,0 +1,1 @@
+../../../AI/GEMINI/skills/sql/alembic/python-alembic-gen-insert.md
