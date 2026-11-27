@@ -196,3 +196,44 @@ To verify that all symbolic links are correctly configured and resolve without b
   Get-Item AI | Select-Object Name, LinkType, Target
   Get-ChildItem .agents\skills | Select-Object Name, LinkType, Target
   ```
+
+---
+
+## 6. MCP Server (Repositório Docker)
+
+To run the Nievo AI MCP server via Docker, use the official image repository:
+
+- **Image**: `docker.io/pedrovotf/nievo-ai:latest`
+
+### Pull & Run
+
+```bash
+# Pull the latest image
+docker pull docker.io/pedrovotf/nievo-ai:latest
+
+# Run the MCP server container (stdio)
+docker run -i --rm docker.io/pedrovotf/nievo-ai:latest
+```
+
+### MCP Client Configuration
+
+Add the following server entry to your MCP client configuration (`mcpServers`):
+
+```json
+{
+  "mcpServers": {
+    "nievo-ai": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "docker.io/pedrovotf/nievo-ai:latest"
+      ]
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Additional Docker flags (such as environment variables or volume mounts) can be added to `args` if required by your host setup.
