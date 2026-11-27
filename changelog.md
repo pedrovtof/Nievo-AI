@@ -4,6 +4,63 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-27 - [NEW] - Add setup skill for full NIEVO onboarding and plugin-scoped MCP configuration
+
+Detalhes:
+
+- Add setup skill in AI/GEMINI/skills/setup/setup.md for interactive submodule, GEMINI.md, relative symbolic links, and project/plugin-scoped nievo_ai MCP configuration (.agents/plugins/<name>/plugin.json and mcp_config.json) with bundled GitHub MCP - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic link .agents/skills/setup/SKILL.md -> ../../../AI/GEMINI/skills/setup/setup.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update README.md to document the setup skill, bundled GitHub MCP inside nievo_ai, and .agents/plugins/nievo-ai/ configuration - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [CHG] - Configure explicit tools, customization inheritance, and MCP permissions across custom agents
+
+Detalhes:
+
+- Configure delegation-only tools (invoke_subagent, manage_subagents, define_subagent, read_file, send_message, ask_question, update_steps, manage_task, schedule, search_web) plus inheritCustomizations and inheritMcp in AI/GEMINI/agents/nievo-orchestrator.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Configure file editing (write_file, edit_file), sandboxed terminal execution (run_command with commandExecutionPolicy: sandbox), inheritCustomizations, and inheritMcp in dotnet-admin.md, documentation-admin.md, and git-admin.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Document custom agent tool and MCP permission profiles in README.md - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [NEW] - Add nievo-orchestrator custom agent for multi-agent workflow orchestration
+
+Detalhes:
+
+- Add nievo-orchestrator master agent definition in AI/GEMINI/agents/nievo-orchestrator.md coordinating dotnet-admin, documentation-admin, git-admin, and extensible future domain agents with interactive gate mediation - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic link .agents/agents/nievo-orchestrator.md -> ../../AI/GEMINI/agents/nievo-orchestrator.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update README.md with nievo-orchestrator agent entry and verification example - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [NEW] - Add dotnet-admin custom agent for .NET backend and Python Alembic orchestration
+
+Detalhes:
+
+- Add dotnet-admin agent definition in AI/GEMINI/agents/dotnet-admin.md orchestrating dotnet-gen-controller, dotnet-gen-entity, dotnet-gen-service, dotnet-gen-test, python-alembic-gen-entity, python-alembic-gen-index, python-alembic-gen-insert, and python-alembic-gen-keys skills - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic link .agents/agents/dotnet-admin.md -> ../../AI/GEMINI/agents/dotnet-admin.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update README.md with dotnet-admin agent entry and verification example - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [NEW] - Add Python Alembic skills for data inserts, indexes, and PK/FK keys
+
+Detalhes:
+
+- Add python-alembic-gen-insert skill for interactive Alembic seed/data insert migrations with audit column defaults and FK-aware downgrade cleanup - pedrovotf - 2026-11-27 - N/A - PENDING
+- Add python-alembic-gen-index skill for interactive Alembic standard, unique, composite, partial, and concurrent index migrations with schema-qualified drops - pedrovotf - 2026-11-27 - N/A - PENDING
+- Add python-alembic-gen-keys skill for interactive Alembic primary key and foreign key constraint migrations using idempotent pg_constraint guards - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic links for python-alembic-gen-insert, python-alembic-gen-index, and python-alembic-gen-keys under .agents/skills/ - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [NEW] - Add documentation-admin custom agent for diff-driven documentation and diagram orchestration
+
+Detalhes:
+
+- Add documentation-admin agent definition in AI/GEMINI/agents/documentation-admin.md orchestrating documentation-orchestrator, dbdiagram-database-diagram, mermaid-class-diagram, mermaid-sequence-diagram, mermaid-use-case-diagram, and mermaid-decision-flow skills - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic link .agents/agents/documentation-admin.md -> ../../AI/GEMINI/agents/documentation-admin.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update README.md with documentation-admin agent entry and verification example - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [NEW] - Add git-admin custom agent for Git workflow and GitHub board orchestration
+
+Detalhes:
+
+- Add git-admin agent definition in AI/GEMINI/agents/git-admin.md integrating official GitHub MCP (Docker MCP Gateway), GitHub CLI (gh), and the git-branch, git-commit, git-push-request, and git-pull-request skills - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic link .agents/agents/git-admin.md -> ../../AI/GEMINI/agents/git-admin.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update README.md with custom agents symbolic link setup, mandatory registration addendum, verification commands, and git-admin overview - pedrovotf - 2026-11-27 - N/A - PENDING
+
 2026-11-27 - [DOC] - Add MCP Docker repository reference to README
 
 Detalhes:
