@@ -1,0 +1,1 @@
+../../AI/GEMINI/agents/git-admin.md
