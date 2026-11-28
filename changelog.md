@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-27 - [CHG] - Enforce mandatory develop branch tracking for Nievo-AI submodule in setup skill and README
+
+Detalhes:
+
+- Update README.md Section 1 (Submodule Integration), Section 5 (Verification), Section 6 (Automated Full Onboarding and Quick Troubleshooting) to require adding and keeping the Nievo-AI submodule on branch develop (branch = develop in .gitmodules and local checkout on develop) - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update AI/GEMINI/skills/setup/setup.md across frontmatter, overview, Mermaid diagram, pre-flight inspection (Linux/Windows), confirmation gate, Phase 5.1 submodule initialization/enforcement, Phase 6 verification, troubleshooting, safety rule #8, and verification checklist to enforce branch develop on Nievo-AI without discarding local changes - pedrovotf - 2026-11-27 - N/A - PENDING
+
 2026-11-27 - [SEC] - Enforce LOCAL-only Postman environment reads and universal .env prohibition across all skills and agents
 
 Detalhes:
