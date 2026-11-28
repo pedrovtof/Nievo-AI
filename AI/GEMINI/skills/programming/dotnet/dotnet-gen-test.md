@@ -164,6 +164,7 @@ Verify:
 1. Zero test failures or skipped tests.
 2. Every `[Fact]` prints both the response payload content (including Enum numeric `code` and `message` or data) and `[PASS]` confirmation.
 3. Run the full test suite (`dotnet test`) before finishing to ensure zero regressions.
+4. **Never Read `.env` Files**: Never read standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env` — inspect only `.env-example` / `.env.example` / `env-example.txt` templates if needed), and never place real credentials in test fixtures.
 
 ---
 
@@ -175,3 +176,4 @@ Verify:
 - [ ] Request Builders (`Bogus`) and Entity Fakers created/updated; SQLite test base DDL/sync updated for any new tables.
 - [ ] Every test prints serialized response content and explicit pass status via `ITestOutputHelper`.
 - [ ] `dotnet test` executed with `--logger "console;verbosity=detailed"` and all tests pass with visible output.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero real secrets in test code.

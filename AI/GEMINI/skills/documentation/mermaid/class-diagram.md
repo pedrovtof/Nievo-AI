@@ -154,6 +154,7 @@ classDiagram
    - Quote labels containing special symbols or punctuation: `class_id["Class Label (Details)"]`.
 4. **Maintenance**: Whenever you alter a class signature, add a property, or modify an interface, immediately update the corresponding diagram.
 5. **SOLID Principles**: Ensure diagrams reflect good design practices like Single Responsibility Principle (SRP) and Dependency Inversion Principle (DIP), using interfaces for dependencies where appropriate.
+6. **Never Read `.env` or Expose Secrets**: Never read standard project `.env` files (`.env`, `.env.local`, `.env.*`, `mcp_secrets.env` — inspect only `.env-example` / `.env.example` / `env-example.txt` templates if needed) and never include real credentials in diagrams.
 
 ## 6. Verification Checklist
 
@@ -162,3 +163,4 @@ classDiagram
 - [ ] Attributes and methods include visibility prefixes (`+`, `-`, etc.) and types.
 - [ ] Relationships reflect true architectural coupling (inheritance, composition, dependency).
 - [ ] No unescaped special characters causing rendering syntax errors.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero real secrets exposed.

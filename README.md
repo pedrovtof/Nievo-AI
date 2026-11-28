@@ -136,7 +136,7 @@ To link all skills present in `Nievo-AI/.agents/skills/` at once:
 - **Linux / macOS (Bash)**:
   ```bash
   for skill in Nievo-AI/.agents/skills/*; do
-    [ -d "$skill" ] && ln -sf "../../$skill" ".agents/skills/$(basename "$skill")"
+    [ -d "$skill" ] && ln -sfn "../../$skill" ".agents/skills/$(basename "$skill")"
   done
   ```
 
@@ -241,6 +241,7 @@ To verify that all symbolic links are correctly configured and resolve without b
   AI -> Nievo-AI/AI
   dbdiagram -> ../../Nievo-AI/.agents/skills/dbdiagram
   documentation -> ../../Nievo-AI/.agents/skills/documentation
+  postman -> ../../Nievo-AI/.agents/skills/postman
   setup -> ../../Nievo-AI/.agents/skills/setup
   ...
   documentation-admin.md -> ../../Nievo-AI/.agents/agents/documentation-admin.md
@@ -258,61 +259,184 @@ To verify that all symbolic links are correctly configured and resolve without b
 
 ---
 
-## 6. MCP Server (Repositório Docker) & Skill `setup`
+## 6. MCP Server (Docker MCP Gateway + Stitch) & Skill `setup`
 
-To run the Nievo AI MCP server via Docker, use the official image repository (which **already includes the GitHub MCP server**):
+All NIEVO MCP configurations are **strictly project-scoped (never global)** and live inside the consumer repository under `.agents/plugins/nievo/` and `mcp_secrets.env` (protected by `.gitignore`).
 
-- **Image**: `docker.io/pedrovotf/nievo_ai:latest`
+- **`nievo_ai`**: **Docker MCP Gateway** running servers from the official Docker MCP catalog (`https://desktop.docker.com/mcp/catalog/v3/catalog.yaml`) with `--servers brave,github-official,postman,gemini-api-docs,docker-docs,javadocs,terraform` and project-local `--secrets "<PROJECT_ROOT>/mcp_secrets.env"`.
+- **`stitch`**: Remote **Streamable HTTP** MCP server (`https://stitch.googleapis.com/mcp`) for UI/design workflows with Google Stitch.
+
+> [!IMPORTANT]
+> **Why `--catalog` + `--servers` + `--secrets` Instead of `--profile` + `--secrets`**:
+> In `docker-mcp v0.44.3+`, `--profile` is **mutually exclusive** with `--secrets`, `--catalog`, and `--servers` (`cannot use --profile with ... --secrets ...`). Using `--catalog` + `--servers` + `--secrets` ensures 100% project-scoped secrets on **Linux (without Docker Desktop / `docker pass`)** and **Windows**, and already includes `github-official` (no separate GitHub MCP entry needed).
 
 ### Automated Full Onboarding (`setup` Skill)
 
-Use the `setup` skill ([AI/GEMINI/skills/setup/setup.md](AI/GEMINI/skills/setup/setup.md) / `.agents/skills/setup/SKILL.md`) to interactively configure the full NIEVO environment in a project:
-- Verify/initialize the `Nievo-AI` submodule and `GEMINI.md`
-- Create cross-platform relative symbolic links (`AI/`, `.agents/skills/`, `.agents/agents/`)
-- Scaffold project/plugin-scoped MCP configuration under `.agents/plugins/nievo-ai/` (`plugin.json` + `mcp_config.json`)
-- Pull and verify `docker.io/pedrovotf/nievo_ai:latest`
+Use the `setup` skill ([AI/GEMINI/skills/setup/setup.md](AI/GEMINI/skills/setup/setup.md) / `.agents/skills/setup/SKILL.md`) to interactively configure the full NIEVO environment on **Linux** or **Windows**. Its workflow **always starts by creating the project-scoped MCP mold**:
 
-### Pull & Run
+1. **`.gitignore` Guard & Secrets Mold**: Ensures `mcp_secrets.env` and `.agents/plugins/nievo/mcp_config.json` are ignored by Git before generating `mcp_secrets_example.txt` and copying it to `mcp_secrets.env`.
+2. **Plugin-Scoped MCP Config**: Scaffolds `.agents/plugins/nievo/plugin.json`, `.agents/plugins/nievo/mcp_config.example.json`, and `.agents/plugins/nievo/mcp_config.json` (`nievo_ai` + `stitch`) pointing `--secrets` to the local project's `mcp_secrets.env`.
+3. **Docker MCP CLI Plugin**: Guides `docker-mcp` CLI plugin installation (Linux & Windows) and optional extra server / `--config` customization.
+4. **Submodule, `GEMINI.md` & Symlinks**: Initializes `./Nievo-AI/`, `GEMINI.md`, and cross-platform relative symbolic links (`AI/`, `.agents/skills/`, `.agents/agents/`), then validates everything with `--dry-run`.
+
+---
+
+### Manual Setup (Linux & Windows — Project-Scoped Only)
+
+#### Step 6.1: Install the `docker-mcp` CLI Plugin
+
+- **Linux (`amd64` / `arm64`)**:
+  ```bash
+  mkdir -p ~/.docker/cli-plugins
+
+  # x86_64 (amd64)
+  curl -fsSL https://github.com/docker/mcp-gateway/releases/download/v0.44.3/docker-mcp-linux-amd64.tar.gz \
+    | tar -xz -C ~/.docker/cli-plugins/
+
+  # Or ARM64 (arm64)
+  # curl -fsSL https://github.com/docker/mcp-gateway/releases/download/v0.44.3/docker-mcp-linux-arm64.tar.gz \
+  #   | tar -xz -C ~/.docker/cli-plugins/
+
+  chmod +x ~/.docker/cli-plugins/docker-mcp
+  docker mcp version
+  ```
+
+- **Windows — Option A (Recommended: Docker Desktop)**:
+  1. Start **Docker Desktop for Windows**.
+  2. Enable **MCP Toolkit** under **Settings > Features / Beta features**.
+  3. Validate in PowerShell: `docker mcp version`.
+
+- **Windows — Option B (Standalone PowerShell CLI)**:
+  ```powershell
+  New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.docker\cli-plugins" | Out-Null
+
+  # x64 (amd64) — replace amd64 with arm64 for ARM64
+  curl.exe -fsSL -L "https://github.com/docker/mcp-gateway/releases/download/v0.44.3/docker-mcp-windows-amd64.tar.gz" -o "$env:TEMP\docker-mcp.tar.gz"
+  tar -xzf "$env:TEMP\docker-mcp.tar.gz" -C "$env:USERPROFILE\.docker\cli-plugins"
+  Remove-Item "$env:TEMP\docker-mcp.tar.gz"
+  docker mcp version
+  ```
+
+#### Step 6.2: Prepare `.gitignore`, `mcp_secrets.env` & `.agents/plugins/nievo/`
+
+1. Add the project-local secret and machine-specific config files to `.gitignore` **before** creating `mcp_secrets.env`:
+   ```gitignore
+   mcp_secrets.env
+   .agents/plugins/nievo/mcp_config.json
+   ```
+
+2. Copy the mold [AI/GEMINI/skills/setup/templates/mcp_secrets_example.txt](AI/GEMINI/skills/setup/templates/mcp_secrets_example.txt) to `mcp_secrets_example.txt` and `mcp_secrets.env` in your project root:
+   ```bash
+   # Linux (Bash)
+   cp Nievo-AI/AI/GEMINI/skills/setup/templates/mcp_secrets_example.txt mcp_secrets_example.txt
+   cp mcp_secrets_example.txt mcp_secrets.env
+   chmod 600 mcp_secrets.env
+   ```
+   ```powershell
+   # Windows (PowerShell)
+   Copy-Item Nievo-AI\AI\GEMINI\skills\setup\templates\mcp_secrets_example.txt mcp_secrets_example.txt
+   Copy-Item mcp_secrets_example.txt mcp_secrets.env
+   ```
+
+3. Create `.agents/plugins/nievo/plugin.json`:
+   ```json
+   {
+     "name": "nievo",
+     "repository": "https://github.com/pedrovtof/Nievo-Skills"
+   }
+   ```
+
+4. Create `.agents/plugins/nievo/mcp_config.example.json` (template) and `.agents/plugins/nievo/mcp_config.json` (git-ignored, using your project's absolute path to `mcp_secrets.env` and your local Stitch API key):
+   ```json
+   {
+     "mcpServers": {
+       "nievo_ai": {
+         "command": "docker",
+         "args": [
+           "mcp",
+           "gateway",
+           "run",
+           "--catalog",
+           "https://desktop.docker.com/mcp/catalog/v3/catalog.yaml",
+           "--servers",
+           "brave,github-official,postman,gemini-api-docs,docker-docs,javadocs,terraform",
+           "--secrets",
+           "<PROJECT_ROOT>/mcp_secrets.env"
+         ]
+       },
+       "stitch": {
+         "type": "http",
+         "url": "https://stitch.googleapis.com/mcp",
+         "headers": {
+           "X-Goog-Api-Key": "<SUA_CHAVE_API_STITCH>"
+         }
+       }
+     }
+   }
+   ```
+   - On **Linux**, set `"<PROJECT_ROOT>/mcp_secrets.env"` to e.g. `"/path/to/your-project/mcp_secrets.env"`.
+   - On **Windows**, set it to e.g. `"C:\\path\\to\\your-project\\mcp_secrets.env"` (or `"C:/path/to/your-project/mcp_secrets.env"`).
+   - To enable extra catalog servers (e.g. `kubernetes`, `kubectl-mcp-server`, `prometheus`, `sonarqube`, `dockerhub`, `clickhouse`, `redis`, `mcp-discord`, `mcp-reddit`, `openapi-schema`), add them to `--servers` and, if local non-secret configuration is needed, pass `"--config", "<PROJECT_ROOT>/.agents/plugins/nievo/mcp_servers_config.yaml"`.
+
+#### Step 6.3: Validate & Reload Antigravity
 
 ```bash
-# Pull the latest image
-docker pull docker.io/pedrovotf/nievo_ai:latest
-
-# Run the MCP server container (stdio)
-docker run -i --rm docker.io/pedrovotf/nievo_ai:latest
+# Linux (Bash)
+git check-ignore -v mcp_secrets.env .agents/plugins/nievo/mcp_config.json
+python3 -m json.tool .agents/plugins/nievo/plugin.json >/dev/null && echo "plugin.json OK"
+python3 -m json.tool .agents/plugins/nievo/mcp_config.json >/dev/null && echo "mcp_config.json OK"
+docker mcp gateway run \
+  --catalog https://desktop.docker.com/mcp/catalog/v3/catalog.yaml \
+  --servers brave,github-official,postman,gemini-api-docs,docker-docs,javadocs,terraform \
+  --secrets "$PWD/mcp_secrets.env" \
+  --dry-run
 ```
 
-### Project/Plugin-Scoped MCP Configuration (`.agents/plugins/nievo-ai/`)
-
-In Antigravity project/plugin scope, create `.agents/plugins/nievo-ai/plugin.json`:
-
-```json
-{
-  "name": "nievo-ai",
-  "repository": "https://github.com/pedrovtof/Nievo-Skills"
-}
+```powershell
+# Windows (PowerShell)
+git check-ignore -v mcp_secrets.env .agents/plugins/nievo/mcp_config.json
+Get-Content .\.agents\plugins\nievo\plugin.json -Raw | ConvertFrom-Json | Out-Null; "plugin.json OK"
+Get-Content .\.agents\plugins\nievo\mcp_config.json -Raw | ConvertFrom-Json | Out-Null; "mcp_config.json OK"
+docker mcp gateway run `
+  --catalog https://desktop.docker.com/mcp/catalog/v3/catalog.yaml `
+  --servers brave,github-official,postman,gemini-api-docs,docker-docs,javadocs,terraform `
+  --secrets "$((Get-Location).Path)\mcp_secrets.env" `
+  --dry-run
 ```
 
-And add the `nievo_ai` server entry in `.agents/plugins/nievo-ai/mcp_config.json`:
+After `--dry-run` exits `0`, reload Antigravity and check **Additional Options (...) > MCP Servers** to confirm `nievo_nievo_ai` and `nievo_stitch` are active.
 
-```json
-{
-  "mcpServers": {
-    "nievo_ai": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "docker.io/pedrovotf/nievo_ai:latest"
-      ]
-    }
-  }
-}
-```
+#### Quick Troubleshooting
 
-> [!NOTE]
-> Because `docker.io/pedrovotf/nievo_ai:latest` already embeds the GitHub MCP, no separate GitHub MCP entry is needed. Additional Docker flags (such as `-e ENV_VAR` pass-throughs or `-v` volume mounts) can be added to `args` before the image name if required by your host setup—never hardcode raw secrets in committed JSON files.
+| Erro observado | Causa | Solução |
+| :--- | :--- | :--- |
+| `cannot use --profile with ... --secrets ...` | No `docker-mcp v0.44.3+`, `--profile` é mutuamente exclusivo com `--secrets`, `--catalog` e `--servers` | Usar `--catalog https://desktop.docker.com/mcp/catalog/v3/catalog.yaml --servers ... --secrets "<PROJECT_ROOT>/mcp_secrets.env"` |
+| `Reading catalog from [docker-mcp.yaml]` e `0 tools listed` | `--servers` sem `--catalog` procura `docker-mcp.yaml` local inexistente | Passar `--catalog https://desktop.docker.com/mcp/catalog/v3/catalog.yaml` |
+| `docker: Error response from daemon: no command specified` | Tentativa de rodar um profile OCI com `docker run` | Usar `docker mcp gateway run --catalog ... --servers ... --secrets "<PROJECT_ROOT>/mcp_secrets.env"` |
+| `docker: unknown command: docker mcp` | Plugin `docker-mcp` ausente em `cli-plugins` | Instalar seguindo o **Step 6.1** (Linux ou Windows) |
+| `docker pass has not been installed` | Ambiente sem Docker Desktop / `docker pass` | Já resolvido pelo padrão do projeto passando `--catalog` + `--servers` + `--secrets "<PROJECT_ROOT>/mcp_secrets.env"` |
+| `Chave ou segredo exposto em arquivo untracked` | `.gitignore` sem as regras locais | Garantir `mcp_secrets.env` e `.agents/plugins/nievo/mcp_config.json` no `.gitignore` e versionar apenas `mcp_secrets_example.txt` e `mcp_config.example.json` |
+
+### Git Skills & Official GitHub MCP Integration
+
+All four Git skills (`AI/GEMINI/skills/git/*.md`, exposed via `.agents/skills/git-*/SKILL.md`) are configured to work natively with the **`github-official`** server inside the project-scoped **`nievo_ai`** Docker MCP Gateway (using `gh` CLI as complement/fallback and local/Markdown fallbacks when unauthenticated):
+
+| Skill | Official GitHub MCP (`github-official`) Role | Local-Only Git Boundary | Fallback (`gh` / Manual) |
+| :--- | :--- | :--- | :--- |
+| **`git-branch`** | Read-only discovery of remote branches (`list_branches`), issue/card metadata (`issue_read` / `get_issue`), and boards (`projects` when enabled) | Branch creation strictly via `git checkout -b` after user confirmation (no `create_branch` / MCP writes) | `git ls-remote`, `gh repo view`, `gh issue view`, `gh api graphql` / `gh project list` |
+| **`git-commit`** | Optional read-only card (`issue_read` / `get_issue`) and author (`get_me`) verification for footers and `changelog.md` | Staging and committing strictly via local `git add` / `git commit` (no `git pull`, `git push`, or MCP file writes) | `git config user.name`, `gh issue view`, offline local commit |
+| **`git-push-request`** | Remote branch/card/board validation (`list_branches`, `issue_read` / `get_issue`) and existing-PR check (`list_pull_requests`, `update_pull_request`) | Remote sync (`git pull`), `changelog.md`-only conflict auto-resolution, diff inspection, and `git push -u origin` (never MCP `push_files`) | `git ls-remote`, `gh issue view`, `gh pr list`, `gh pr edit`, formatted PR Markdown |
+| **`git-pull-request`** | Duplicate PR guard (`list_pull_requests`), PR creation (`create_pull_request`), PR updates (`update_pull_request`), and review/check inspection (`pull_request_read`) | Quality gate checks and `git push -u origin` before PR creation (never auto-merges via `merge_pull_request`) | `gh pr list`, `gh pr create`, `gh pr edit`, `gh pr view` / `gh pr checks`, manual Markdown |
+
+### Postman Skill & Postman MCP Integration
+
+The **`postman`** skill ([AI/GEMINI/skills/documentation/postman/postman.md](AI/GEMINI/skills/documentation/postman/postman.md), exposed via `.agents/skills/postman/SKILL.md`) integrates with the **`postman`** server inside the project-scoped **`nievo_ai`** Docker MCP Gateway (using `postman.postman-api-key` from `mcp_secrets.env`) and is automatically orchestrated by `documentation-orchestrator` and `documentation-admin` whenever HTTP endpoints are created or modified:
+
+- **Automatic Workspace & Language-Agnostic Hierarchy**: Creates the project Workspace (e.g., `Nievo-portal`) if missing and maps modules to `./<Module>/<endpoint-path>` regardless of stack (e.g., `Nievo.Portal.Core` with route `public/admin/user/v1/create` -> `./Core/public/admin/user/v1/create`).
+- **`LOCAL` Environment Only & Reusable Variables**: Auto-creates (or non-destructively merges) **exclusively** the **`LOCAL`** environment in the workspace for reusable variables (`host_<module>`, `host_port_<module>`, `bearer_token_<module>`, `default_page`, `default_page_size`), referencing them with `{{...}}` while keeping endpoint-specific fields literal — **never** reading or modifying `DEV`, `QA`, `STAGING`, `PROD`, or any non-`LOCAL` Postman environment, and **never** reading project `.env` / `.env.*` / `mcp_secrets.env` files.
+- **`success` Request & Non-Idempotency Note**: Creates a `{{host_*}}:{{host_port_*}}` + `cURL`-documented `success` request and explicitly notes first-run / uniqueness caveats when repeating the same payload cannot succeed (e.g., user creation).
+- **`/testes/` Folder (`error_*` & `stress_*`)**: Creates one `error_<enum_name>_<expected_status>` request per application error ENUM handled by the endpoint (e.g., `error_user_already_exists_400`) alongside contextual `stress_<scenario>_<expected_status>` pressure tests.
+- **Strict Creation-Only Boundary**: Creates and updates Postman artifacts (or emits Collection v2.1.0 JSON + `cURL` fallback when MCP is unavailable) **without executing requests or validating runtime responses**.
 
 ---
 
@@ -322,7 +446,7 @@ Custom agents live canonically under `AI/GEMINI/agents/` and are exposed to the 
 
 | Agent | Source | Symlink | Purpose |
 | :--- | :--- | :--- | :--- |
-| **`documentation-admin`** | [AI/GEMINI/agents/documentation-admin.md](AI/GEMINI/agents/documentation-admin.md) | `.agents/agents/documentation-admin.md` | Inspects branch diffs and codebase changes, searches `Documentation/config/docs/`, updates or scaffolds MkDocs docs and navigation, and orchestrates `documentation-orchestrator`, `dbdiagram-database-diagram`, `mermaid-class-diagram`, `mermaid-sequence-diagram`, `mermaid-use-case-diagram`, and `mermaid-decision-flow`. |
+| **`documentation-admin`** | [AI/GEMINI/agents/documentation-admin.md](AI/GEMINI/agents/documentation-admin.md) | `.agents/agents/documentation-admin.md` | Inspects branch diffs and codebase changes, searches `Documentation/config/docs/`, updates or scaffolds MkDocs docs and navigation, and orchestrates `documentation-orchestrator`, `dbdiagram-database-diagram`, `mermaid-class-diagram`, `mermaid-sequence-diagram`, `mermaid-use-case-diagram`, `mermaid-decision-flow`, and `postman` (creation-only MCP sync). |
 | **`dotnet-admin`** | [AI/GEMINI/agents/dotnet-admin.md](AI/GEMINI/agents/dotnet-admin.md) | `.agents/agents/dotnet-admin.md` | Orchestrates end-to-end Python Alembic migrations (`python-alembic-gen-entity`, `python-alembic-gen-keys`, `python-alembic-gen-index`, `python-alembic-gen-insert`) and .NET backend engineering (`dotnet-gen-entity`, `dotnet-gen-controller`, `dotnet-gen-service`, `dotnet-gen-test`) while enforcing mandatory audit columns, `active = true` filtering, ORM/Dapper split, Response contracts, and full xUnit test coverage. |
 | **`git-admin`** | [AI/GEMINI/agents/git-admin.md](AI/GEMINI/agents/git-admin.md) | `.agents/agents/git-admin.md` | Validates the current repository and GitHub Project/Board via Official GitHub MCP (Docker MCP Gateway) and GitHub CLI (`gh`), asks the user **only for the card**, and orchestrates `git-branch`, `git-commit`, `git-push-request`, and `git-pull-request` (skipping branch creation when the topic branch already exists). |
 | **`nievo-orchestrator`** | [AI/GEMINI/agents/nievo-orchestrator.md](AI/GEMINI/agents/nievo-orchestrator.md) | `.agents/agents/nievo-orchestrator.md` | Master workflow orchestrator (`mainAgent: true`, `subagent: false`) that coordinates end-to-end delivery across `dotnet-admin`, `documentation-admin`, `git-admin`, and extensible future domain agents, mediating interactive human gates via `send_message` and verifying inter-stage quality gates. |

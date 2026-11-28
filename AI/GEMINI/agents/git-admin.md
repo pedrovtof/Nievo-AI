@@ -59,7 +59,7 @@ While keeping user questions strictly limited to the card number during discover
 
 - Only modify files required by the Git workflow (such as `changelog.md` for mandatory commit synchronization and automated merge conflict resolution).
 - Never modify unrelated application source code unless explicitly instructed by the user.
-- **Never** read, inspect, or stage `.env` files (`.env-example` / `.env.example` templates may be inspected if needed, never `.env`).
+- **Never** read, inspect, or stage standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`; `.env-example` / `.env.example` / `env-example.txt` / `mcp_secrets_example.txt` templates may be inspected if needed, never real `.env` files).
 
 ---
 
@@ -119,8 +119,9 @@ From this inspection, determine:
 
 Validate the repository and discover its associated GitHub Project/Board using a **dual-channel strategy**:
 
-1. **Official GitHub MCP Server (Primary — Docker MCP Gateway Profile)**:
-   - When official GitHub MCP tools are available in the runtime, use them first to inspect repository metadata, issues/cards, branches, and open Pull Requests.
+1. **Official GitHub MCP Server (Primary — `github-official` via `nievo_ai` Docker MCP Gateway)**:
+   - When official GitHub MCP tools are available in the runtime (configured via `.agents/plugins/nievo/mcp_config.json` and `mcp_secrets.env`), use them first (`list_branches`, `issue_read` / `get_issue`, `list_pull_requests`, and the `projects` toolset when enabled) to inspect repository metadata, issues/cards, branches, and open Pull Requests.
+   - *(Note: Official `github/github-mcp-server` tools may appear with consolidated names like `issue_read` / `pull_request_read` or classic aliases like `get_issue` / `get_pull_request`, and clients may prefix them by server/plugin name such as `nievo_nievo_ai`.)*
 2. **GitHub CLI (`gh`) (Complement & Fallback)**:
    - Use `gh` to query GitHub Projects v2 boards (which may not be exposed by all MCP toolsets) and as a full fallback whenever any MCP call is unavailable or incomplete:
 
@@ -161,10 +162,10 @@ Then ask **ONLY** for the **Card**:
 - *"Qual é o número do **card** (ou `N/A`)?"* (or English equivalent if the user wrote in English).
 - If the active branch name already embeds a card number (e.g., `card-14`), mention it and ask only for confirmation or correction of the card number.
 
-Once the user replies with a card number (other than `N/A`), validate it against the repository and board:
+Once the user replies with a card number (other than `N/A`), validate it against the repository and board using Official GitHub MCP (`issue_read` / `get_issue` and `projects` when enabled) with `gh` CLI as complement/fallback:
 
 ```bash
-# Validate issue/card metadata (or use equivalent Official GitHub MCP issue/project tools)
+# Fallback / complement: validate issue/card metadata and Projects v2 items
 gh issue view "<card>" --json number,title,url,state,labels,projectItems
 gh project item-list "<board-number>" --owner "<owner>" --format json
 ```
@@ -191,7 +192,7 @@ Read and follow [branch.md](../skills/git/branch.md) (`.agents/skills/git-branch
 
 ### Phase 5: Commit via `git-commit` Skill
 
-Read and follow [commit.md](../skills/git/commit.md) (`.agents/skills/git/commit.md`).
+Read and follow [commit.md](../skills/git/commit.md) (`.agents/skills/git-commit/SKILL.md`).
 
 - Check whether uncommitted changes exist (`git status --porcelain`) or whether commits ahead of `<base>` are missing a corresponding `changelog.md` entry.
 - If the working tree is already clean AND commits with an up-to-date `changelog.md` entry already exist ahead of `origin/<base>`, skip redundant commits and proceed to **Phase 6**.
@@ -211,7 +212,7 @@ Read and follow [commit.md](../skills/git/commit.md) (`.agents/skills/git/commit
 
 ### Phase 6: Sync, Conflict Resolution & Push via `git-push-request` Skill
 
-Read and follow [push-request.md](../skills/git/push-request.md) (`.agents/skills/git/push-request.md`).
+Read and follow [push-request.md](../skills/git/push-request.md) (`.agents/skills/git-push-request/SKILL.md`).
 
 1. **Pre-Push Sync**:
    - Check if the current branch has a remote branch (`git ls-remote --heads origin "$BRANCH"`).
@@ -233,23 +234,24 @@ Read and follow [push-request.md](../skills/git/push-request.md) (`.agents/skill
 
 ### Phase 7: Quality Gate & Pull Request via `git-pull-request` Skill
 
-Read and follow [pull-request.md](../skills/git/pull-request.md) (`.agents/skills/git/pull-request.md`) and [.github/pull_request_template.md](../../../.github/pull_request_template.md).
+Read and follow [pull-request.md](../skills/git/pull-request.md) (`.agents/skills/git-pull-request/SKILL.md`) and [.github/pull_request_template.md](../../../.github/pull_request_template.md).
 
 1. **Pre-PR Quality Gate**:
    - Verify `changelog.md` contains the entry for this work.
    - Verify documentation / diagrams under `Documentation/` or `AI/` are updated if contracts, endpoints, schemas, or rules changed.
    - If the repository defines an automated test suite, execute the relevant tests and confirm they pass cleanly.
-   - Verify `git status --short` shows a clean working tree with no `.env` or temporary files.
+   - Verify `git status --short` shows a clean working tree with no `.env`, `mcp_secrets.env`, or temporary files.
 2. **Assemble PR Title & Body**:
    - **Title**: `<type>(<scope>): <summary of change> (#<card>)` *(omit `(#<card>)` if `N/A`)*.
    - **Body**: Populate all sections of [.github/pull_request_template.md](../../../.github/pull_request_template.md): `### Contain`, `### About`, `### Add to document`, `### Details`, plus `Card : <board-or-card-url>`.
 3. **Check for Existing PR & Create on GitHub**:
-   - First check if an open PR already exists for `$BRANCH` (via Official GitHub MCP or `gh pr list --head "$BRANCH" --state open --json number,url`).
-   - If an open PR already exists, report its URL to the user (do not create a duplicate PR).
-   - Otherwise, create the PR targeting `$BASE_BRANCH` (`develop`, or `main` for `hotfix/`) using **Official GitHub MCP** (preferred when available) or **`gh pr create`**:
+   - First check if an open PR already exists for `$BRANCH` via Official GitHub MCP `list_pull_requests` (`owner`, `repo`, `head: "<owner>:<branch>"`, `state: "open"`) or `gh pr list --head "$BRANCH" --state open --json number,url`.
+   - If an open PR already exists, report its URL to the user (do not create a duplicate PR; optionally refresh the PR body via `update_pull_request` or `gh pr edit` if needed).
+   - Otherwise, create the PR targeting `$BASE_BRANCH` (`develop`, or `main` for `hotfix/`) using **Official GitHub MCP `create_pull_request`** (preferred when available) or **`gh pr create`**:
      ```bash
      gh pr create --base "$BASE_BRANCH" --head "$BRANCH" --title "<pr-title>" --body "<pr-body>"
      ```
+   - After creation, automated review (`gemini-pr-review.yml`) and status checks can be inspected via Official GitHub MCP `pull_request_read` (or `get_pull_request*` aliases) or `gh pr view` / `gh pr checks`.
 4. **Final Output**:
    - Provide the created (or existing) Pull Request URL along with the complete formatted PR Markdown inside a fenced code block for reference.
 
@@ -275,7 +277,7 @@ Read and follow [pull-request.md](../skills/git/pull-request.md) (`.agents/skill
 4. **Preserve Local Edits**: Never discard, reset, or overwrite uncommitted working tree changes when switching or creating branches.
 5. **No Pull/Push Inside Commit Phase**: Keep `git-commit` strictly local; remote sync and push happen exclusively in `git-push-request`.
 6. **Human Gate on Non-Changelog Conflicts**: Auto-resolve merge conflicts **only** in `changelog.md`; stop immediately on conflicts in any other file.
-7. **Never Touch Protected Branches or `.env`**: Never commit directly to `main`, `develop`, or `staging`, never force-push shared branches, and never read or stage `.env` files.
+7. **Never Touch Protected Branches or `.env`**: Never commit directly to `main`, `develop`, or `staging`, never force-push shared branches, and never read or stage standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`).
 
 ---
 

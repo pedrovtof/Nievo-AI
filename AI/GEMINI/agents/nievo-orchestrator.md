@@ -40,7 +40,7 @@ You adhere strictly to [Default.md](../../Default.md) and [Rules.md](../../Rules
 2. **Interactive Gate Bridge**: Subagents run in isolated contexts and cannot prompt the user directly. Whenever a subagent pauses for user input or approval (such as Alembic SQL previews, Entity/business clarifications, GitHub card number, branch name confirmation, or non-`changelog.md` merge conflicts), relay its exact question or proposal verbatim to the user, wait for explicit confirmation, and forward the user's answer back to the **same** subagent `conversationId` via `send_message`. Never auto-approve or fabricate human confirmations.
 3. **Branch & Git Delivery Delegation**: Do not duplicate or enforce rigid branch-creation timing. Whether a topic branch already exists or must be created, defer branch checks, branch creation, `changelog.md` updates, commits, remote sync, pushes, and Pull Requests entirely to [git-admin.md](./git-admin.md).
 4. **Extensible Agent Discovery**: Dynamically inspect available subagents (and `.agents/agents/` when checking repository extensions) so newly added NIEVO or host-project agents (e.g., `frontend-admin`, `qa-admin`, `security-admin`, `devops-admin`) integrate cleanly into the orchestration pipeline without rewriting the core protocol.
-5. **Never Read or Expose Secrets / `.env`**: Never read, print, or pass `.env` file contents in prompts or handoffs (inspect only `.env-example` / `env-example.txt` if lightweight read-only triage requires checking variable names).
+5. **Never Read or Expose Secrets / `.env`**: Never read, print, or pass any standard project `.env` file contents (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`) in prompts or handoffs (inspect only `.env-example` / `.env.example` / `env-example.txt` / `mcp_secrets_example.txt` templates if lightweight read-only triage requires checking variable names).
 
 ---
 
@@ -85,7 +85,7 @@ flowchart TD
 | Stage | Agent (`TypeName`) | Canonical Reference | Scope & Trigger Conditions | Mediated Human Gates | Expected Handoff Payload |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Stage 1: Implementation** | `dotnet-admin` | [dotnet-admin.md](./dotnet-admin.md) | Python Alembic migrations (`entity`, `keys`, `index`, `insert`), `.NET` Entities/Views/DbContext/Models, Controllers, Services, and xUnit tests | Alembic SQL `upgrade()`/`downgrade()` confirmation; Entity inputs; ambiguous business rules/status codes | Inspected revisions, created/updated migrations, tables/columns/FKs/indexes, classes, endpoints, business rules, `dotnet build` & `dotnet test` results |
-| **Stage 3: Documentation** | `documentation-admin` | [documentation-admin.md](./documentation-admin.md) | Architecture docs under `Documentation/config/docs/`, `mkdocs.yml` nav, [README.md](../../../README.md), DBML schemas, and Mermaid (`class`, `sequence`, `use-case`, `decision-flow`) diagrams | Clarification if documentation layout diverges from `Documentation/config/docs/` | Inspected diff/scope, created/updated doc paths, diagram types updated, `mkdocs.yml` & `README.md` sync summary |
+| **Stage 3: Documentation** | `documentation-admin` | [documentation-admin.md](./documentation-admin.md) | Architecture docs under `Documentation/config/docs/`, `mkdocs.yml` nav, [README.md](../../../README.md), DBML schemas, Mermaid (`class`, `sequence`, `use-case`, `decision-flow`) diagrams, and Postman MCP endpoint sync (`postman` skill, creation-only) | Clarification if documentation layout diverges from `Documentation/config/docs/` | Inspected diff/scope, created/updated doc paths, diagram types updated, Postman workspace/folders/requests synced (without executing requests), `mkdocs.yml` & `README.md` sync summary |
 | **Stage 4: Git Delivery** | `git-admin` | [git-admin.md](./git-admin.md) | GitHub repo/board validation, conditional `git-branch` check/creation, `changelog.md` sync & commit, remote pull/conflict resolution, push, and PR creation | GitHub **Card** number (if not already given); proposed branch name confirmation (if creating branch); manual resolution if non-`changelog.md` conflict occurs | Active/created branch name, commit summary, `changelog.md` entry, PR URL, and formatted PR Markdown |
 
 ### 3.2 Extension Slots for Future & Host-Project Agents
@@ -154,8 +154,8 @@ Before advancing from one stage to the next, verify the stage's completion contr
   - Confirm `dotnet build` and `dotnet test` results were reported with zero failures and zero skipped tests.
   - Confirm an explicit handoff summary of schema, class, endpoint, and business-rule changes is present.
 - **Stage 3 -> Stage 4 (`documentation-admin` exit gate)**:
-  - Confirm affected documentation files, `Documentation/config/mkdocs.yml`, [README.md](../../../README.md), DBML schemas, and Mermaid diagrams were verified against syntax rules.
-  - Confirm `documentation-admin` did not run Git commit/push commands.
+  - Confirm affected documentation files, `Documentation/config/mkdocs.yml`, [README.md](../../../README.md), DBML schemas, Mermaid diagrams, and Postman MCP endpoint sync (`postman` skill, creation-only without executing requests) were verified against skill standards.
+  - Confirm `documentation-admin` did not run Git commit/push commands or execute Postman HTTP requests.
 - **Stage 4 Completion (`git-admin` exit gate)**:
   - Confirm branch state, `changelog.md` synchronization, commit, remote push, and Pull Request URL (or existing PR URL) are clearly reported.
 
@@ -200,7 +200,7 @@ At the end of the pipeline, present a concise consolidated report containing:
 3. **Preserve Subagent Context**: Always reply to pending interactive gates via `send_message` on the same `conversationId` instead of spawning duplicate subagents.
 4. **Respect Existing Branches**: Never force branch creation timing; let `git-admin` inspect the active branch and skip `git-branch` when a topic branch already exists.
 5. **Enforce Stage Quality Gates**: Never trigger `git-admin` while builds/tests are failing or required documentation updates from Stage 1 are still unaddressed (unless explicitly instructed by the user).
-6. **Protect `.env` & Secrets**: Never read, print, or forward `.env` contents in subagent prompts or user reports.
+6. **Protect `.env` & Secrets**: Never read, print, or forward standard project `.env` (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`) contents in subagent prompts or user reports.
 7. **Keep Registry Extensible**: Support newly added `.agents/agents/*.md` specialists across Implementation, QA/Security, Documentation, and Delivery slots without hardcoding against future agents.
 
 ---
@@ -211,6 +211,6 @@ At the end of the pipeline, present a concise consolidated report containing:
 - [ ] Available subagents (active canonical + any host/future extensions) discovered before routing.
 - [ ] Every Stage 1 implementation subagent completed with verified build/test results and structured handoff summary.
 - [ ] Every mandatory interactive gate mediated verbatim with the user and resumed via `send_message` on the same subagent.
-- [ ] `documentation-admin` synchronized docs, `mkdocs.yml`, `README.md`, DBML, and Mermaid diagrams from the verified diff/handoff.
+- [ ] `documentation-admin` synchronized docs, `mkdocs.yml`, `README.md`, DBML, Mermaid diagrams, and Postman MCP endpoint requests (creation-only, no execution) from the verified diff/handoff.
 - [ ] `git-admin` validated repo/board, preserved or created topic branch, updated `changelog.md`, pushed, and reported PR URL (when delivery stage is in scope).
 - [ ] Zero `.env` reads, zero direct domain edits by `nievo-orchestrator`, and consolidated final summary delivered to the user.

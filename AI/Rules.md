@@ -10,10 +10,11 @@
 - You must create all the necessary test in frontend changes
 - You must create a mermaid MD diagram for each class you identified in backend code (use AI/GEMINI/skills/documentation/mermaid/class-diagram.md)
 - You must create a mermaid MD diagram for each endpoint/worker that you identified (use AI/GEMINI/skills/documentation/mermaid/sequence-diagram.md)
+- You must synchronize every newly created or modified HTTP endpoint to Postman using AI/GEMINI/skills/documentation/postman/postman.md via Postman MCP (workspace, reading and updating **strictly** the Postman `LOCAL` environment only with reusable variables like `host_<module>`, `host_port_<module>`, `bearer_token_<module>`, `default_page`, `default_page_size`, `./<Module>/<endpoint-path>`, `cURL` `success` + `/testes/` `error_<enum_name>_<status>` & `stress_*`; never read or modify `DEV`, `QA`, `STAGING`, `PROD`, or any non-`LOCAL` Postman environment), strictly creation-only without executing requests
 - You must create a dbdiagram.io MD diagram for each changes in database that you identified (use AI/GEMINI/skills/documentation/dbdiagram/diagram.md)
 - You must create a mermaid MD diagram for each use case identified in business rules (use AI/GEMINI/skills/documentation/mermaid/use-case-diagram.md)
 - You must create a mermaid MD diagram for each complex decision flow or policy gate identified (use AI/GEMINI/skills/documentation/mermaid/decision-flow-diagram.md)
-- You aren't allowed to read .env files, you can read .env-examples files. 
+- You (and every skill and custom agent in this project) are NEVER allowed to read standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`); you may read only template/example files (`.env-example`, `.env.example`, `env-example.txt`, `mcp_secrets_example.txt`).
 - If the user ask for some implementation, you must read the respective skills of the languague (AI/GEMINI/skills/programming)
 - If the user ask for some implementation in the database, you must read the respective skills of the languague (AI/GEMINI/skills/nosql AI/GEMINI/skills/sql)
 - If not exists, you must create for each function/method/class a comment, use the project patterns of the current context languague in the files (AI/GEMINI/skills/programming) when exists, otherwise just use the default patterns.

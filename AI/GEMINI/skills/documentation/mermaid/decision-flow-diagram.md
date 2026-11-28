@@ -114,6 +114,7 @@ flowchart TD
    - Quote labels containing relational operators (`<`, `>`, `<=`, `>=`):
      `evaluate_score -->|"Score >= 750"| auto_approve`
    - Avoid unescaped special characters that could break parsing.
+4. **Never Read `.env` or Expose Secrets**: Never read standard project `.env` files (`.env`, `.env.local`, `.env.*`, `mcp_secrets.env` — inspect only `.env-example` / `.env.example` / `env-example.txt` templates if needed) and never include real credentials in flow diagrams.
 
 ## 7. Verification Checklist
 
@@ -122,3 +123,4 @@ flowchart TD
 - [ ] Terminal states use stadium syntax `([End: ...])`.
 - [ ] All logical pathways terminate cleanly without loose ends.
 - [ ] Quoted edge labels used where comparison operators or parentheses are present.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero real secrets exposed.

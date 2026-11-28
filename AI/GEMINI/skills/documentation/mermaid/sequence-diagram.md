@@ -170,6 +170,7 @@ sequenceDiagram
 4. **Maintenance**: Whenever route parameters, middlewares, or worker retry behaviors change, update the diagram in lockstep.
 5. **Dependency Management**: Use sequence diagrams to visualize interactions through abstractions (e.g., interfaces) to ensure proper dependency injection and loose coupling.
 6. **Logging and Monitoring**: Consider including participants or messages for logging and monitoring systems in critical error paths to ensure proper observability.
+7. **Never Read `.env` or Expose Secrets**: Never read standard project `.env` files (`.env`, `.env.local`, `.env.*`, `mcp_secrets.env` — inspect only `.env-example` / `.env.example` / `env-example.txt` templates if needed) and never place real tokens or credentials inside sequence diagrams.
 
 ## 6. Verification Checklist
 
@@ -179,3 +180,4 @@ sequenceDiagram
 - [ ] Error conditions and alternative paths are covered with `alt` / `else`.
 - [ ] Async message arrows (`-)`) are used for message queues/events.
 - [ ] No unescaped characters breaking MkDocs rendering.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero real secrets exposed.
