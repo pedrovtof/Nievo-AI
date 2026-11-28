@@ -7,7 +7,8 @@ description: >-
   scaffolding .agents/plugins/nievo/plugin.json + mcp_config.json using Docker
   MCP Gateway catalog + --servers + project-local --secrets and stitch),
   installs the docker-mcp CLI plugin if needed, and initializes the Nievo-AI
-  submodule, GEMINI.md, and cross-platform relative symbolic links.
+  submodule strictly on branch develop, GEMINI.md, and cross-platform relative
+  symbolic links.
 ---
 
 # NIEVO Project & MCP Setup Skill (`setup`)
@@ -29,14 +30,14 @@ This skill performs the complete interactive onboarding of a project into the **
 
 > [!NOTE]
 > **Host Project vs. Self-Repo Mode**:
-> - **Host/Consumer Project**: Runs all tasks in order — Task 1 (MCP mold, `.gitignore` guard, `.agents/plugins/nievo/`), Task 2 (`docker-mcp` CLI & server/config setup), Task 3 (`Nievo-AI` submodule, `GEMINI.md`, relative symlinks), and Task 4 (cross-platform verification).
+> - **Host/Consumer Project**: Runs all tasks in order — Task 1 (MCP mold, `.gitignore` guard, `.agents/plugins/nievo/`), Task 2 (`docker-mcp` CLI & server/config setup), Task 3 (`Nievo-AI` submodule pinned to branch `develop`, `GEMINI.md`, relative symlinks), and Task 4 (cross-platform verification).
 > - **Self-Repo (`Nievo-AI` itself)**: Runs Task 1, Task 2, and Task 4 only if requested, and skips creating `Nievo-AI/...` consumer symlinks or consumer `GEMINI.md` bootstrapping (instead validating internal `.agents/skills/*/SKILL.md` and `.agents/agents/*.md` links).
 
 It covers:
 1. **MCP Mold & Project Plugin Config (Always First)**: Preparing `.gitignore`, creating `mcp_secrets_example.txt` and copying it to `mcp_secrets.env`, and scaffolding `.agents/plugins/nievo/plugin.json`, `mcp_config.example.json`, and `mcp_config.json` (`nievo_ai` via `--catalog` + `--servers` + `--secrets`, plus `stitch`).
 2. **Cross-Platform Docker MCP CLI Setup (Linux & Windows)**: Installing/verifying the `docker-mcp` CLI plugin and customizing optional servers or local `--config` YAML if needed.
-3. **Submodule, Directives & Relative Symbolic Links**: Initializing `./Nievo-AI/`, `GEMINI.md`, and portable relative symlinks (`AI/`, `.agents/skills/*`, `.agents/agents/*`) on Linux and Windows.
-4. **Verification & Health Checks**: Validating `.gitignore` protection, JSON syntax, symlinks, `GEMINI.md` references, and `docker mcp gateway run --catalog ... --servers ... --secrets ... --dry-run`.
+3. **Submodule (`develop` Branch), Directives & Relative Symbolic Links**: Initializing/enforcing `./Nievo-AI/` strictly on branch `develop`, `GEMINI.md`, and portable relative symlinks (`AI/`, `.agents/skills/*`, `.agents/agents/*`) on Linux and Windows.
+4. **Verification & Health Checks**: Validating `.gitignore` protection, JSON syntax, `Nievo-AI` `develop` branch tracking, symlinks, `GEMINI.md` references, and `docker mcp gateway run --catalog ... --servers ... --secrets ... --dry-run`.
 
 ---
 
@@ -58,7 +59,7 @@ flowchart TD
     docker_mcp_check -- "Yes" --> repo_mode{"Host Project or Nievo-AI Self-Repo?"}
     docker_mcp_setup --> repo_mode
 
-    repo_mode -- "Host Project" --> submodule["7. Task 3.1: Check or Init Nievo-AI Submodule"]
+    repo_mode -- "Host Project" --> submodule["7. Task 3.1: Check or Init Nievo-AI Submodule (Branch develop)"]
     submodule --> gemini_md["8. Task 3.2: Initialize or Verify GEMINI.md Directives"]
     gemini_md --> symlinks["9. Task 3.3: Setup Relative Symlinks (AI, .agents/skills, .agents/agents)"]
     symlinks --> verify
@@ -87,6 +88,10 @@ git remote get-url origin 2>/dev/null || true
 # Check project structure, .gitignore, and MCP files (existence only; never read .env files)
 ls -ld Nievo-AI AI GEMINI.md .gitignore mcp_secrets_example.txt mcp_secrets.env .agents .agents/skills .agents/agents .agents/plugins .agents/plugins/nievo 2>/dev/null || true
 
+# Check Nievo-AI submodule branch configuration and active branch (host project)
+git config -f .gitmodules --get submodule.Nievo-AI.branch 2>/dev/null || echo "submodule-branch-unset"
+[ -d Nievo-AI/.git ] || [ -f Nievo-AI/.git ] && git -C Nievo-AI branch --show-current || true
+
 # Check Docker and docker-mcp CLI plugin
 docker --version 2>/dev/null || echo "docker-missing"
 docker info >/dev/null 2>&1 && echo "docker-running" || echo "docker-unavailable"
@@ -103,6 +108,10 @@ git remote get-url origin 2>$null
 # Check project structure, .gitignore, and MCP files (existence only; never read .env files)
 Get-Item Nievo-AI, AI, GEMINI.md, .gitignore, mcp_secrets_example.txt, mcp_secrets.env, .agents, .agents\plugins\nievo -ErrorAction SilentlyContinue | Select-Object Name, LinkType, Target
 
+# Check Nievo-AI submodule branch configuration and active branch (host project)
+git config -f .gitmodules --get submodule.Nievo-AI.branch 2>$null
+if (Test-Path Nievo-AI\.git) { git -C Nievo-AI branch --show-current }
+
 # Check Docker and docker-mcp CLI plugin
 docker --version
 docker info *> $null; if ($LASTEXITCODE -eq 0) { "docker-running" } else { "docker-unavailable" }
@@ -112,6 +121,7 @@ docker mcp version
 From this inspection, determine:
 - **Target OS**: Linux (`amd64` / `arm64`) or Windows (`amd64` / `arm64`).
 - **Repository mode**: Consumer host project (has `./Nievo-AI` or needs submodule added) vs. `Nievo-AI` canonical repository.
+- **Submodule branch state (host project)**: Verify whether `.gitmodules` sets `submodule.Nievo-AI.branch = develop` and whether `./Nievo-AI` is currently checked out on `develop` (never `main` or detached HEAD).
 - **Project MCP & `.gitignore` state**: Whether `.gitignore` already ignores `mcp_secrets.env` and `.agents/plugins/nievo/mcp_config.json`, whether `mcp_secrets_example.txt` / `mcp_secrets.env` exist, and whether `.agents/plugins/nievo/` already contains `plugin.json` or `mcp_config.json`.
 - **Docker MCP state**: Whether `docker` is running and whether the `docker-mcp` CLI plugin is installed.
 - **Security rule**: **Never** read `.env` or `mcp_secrets.env` during inspection or execution. Only inspect `mcp_secrets_example.txt` or `.env-example`.
@@ -129,7 +139,7 @@ Present a concise summary of what was detected and confirm the setup parameters 
    - Optional extra servers (e.g., `prometheus`, `kubernetes`, `kubectl-mcp-server`, `sonarqube`, `dockerhub`, `clickhouse`, `redis`, `mcp-discord`, `mcp-reddit`, `openapi-schema`) and optional `--config "<PROJECT_ROOT>/.agents/plugins/nievo/mcp_servers_config.yaml"` if any added server requires local endpoint/path settings.
    - `stitch` (`type: "http"`, `url: "https://stitch.googleapis.com/mcp"`, `headers.X-Goog-Api-Key: "<SUA_CHAVE_API_STITCH>"`).
 4. **Docker MCP CLI Plugin**: Confirm whether to install `docker-mcp` (if missing).
-5. **Host Onboarding Actions** (host projects only): Confirm initializing/verifying `Nievo-AI` submodule, `GEMINI.md`, and cross-platform relative symbolic links (`AI/`, `.agents/skills/*`, `.agents/agents/*`).
+5. **Host Onboarding Actions** (host projects only): Confirm initializing/enforcing the `Nievo-AI` submodule strictly on branch `develop` (`.gitmodules` `branch = develop` + local checkout on `develop`), `GEMINI.md`, and cross-platform relative symbolic links (`AI/`, `.agents/skills/*`, `.agents/agents/*`).
 
 Wait for explicit user confirmation before proceeding to Phase 3.
 
@@ -356,15 +366,35 @@ If Docker is unavailable or the daemon is stopped, inform the user clearly witho
 
 *(Skip Phase 5 when operating in self-check mode inside `Nievo-AI` itself; instead validate existing `.agents/skills/*/SKILL.md` and `.agents/agents/*.md` links.)*
 
-#### 5.1 Verify or Add the `Nievo-AI` Submodule
-- If `./Nievo-AI/` is missing in a host project:
+#### 5.1 Verify or Add the `Nievo-AI` Submodule (Mandatory `develop` Branch)
+
+> [!IMPORTANT]
+> **Obrigatório: Submódulo Sempre na Branch `develop`**:
+> Em todo projeto hospedeiro, o submódulo `Nievo-AI` **DEVE** sempre apontar e permanecer na branch **`develop`** (`branch = develop` no `.gitmodules` e `HEAD` local na branch `develop` — nunca `main`, outra branch ou `HEAD detached`).
+
+- **If `./Nievo-AI/` is missing in a host project**:
   ```bash
-  git submodule add https://github.com/pedrovtof/Nievo-Skills.git ./Nievo-AI/
+  git submodule add -b develop https://github.com/pedrovtof/Nievo-Skills.git ./Nievo-AI/
   git submodule update --init --recursive
+  git -C Nievo-AI checkout develop
   ```
-- If `./Nievo-AI/` exists as an uninitialized submodule directory (empty):
+- **If `./Nievo-AI/` exists as an uninitialized submodule directory (empty)**:
   ```bash
+  git submodule set-branch --branch develop Nievo-AI
+  git submodule sync -- Nievo-AI
   git submodule update --init --recursive
+  git -C Nievo-AI fetch origin develop
+  git -C Nievo-AI checkout -B develop origin/develop
+  ```
+- **If `./Nievo-AI/` is already initialized (enforce `develop`)**:
+  First check `git -C Nievo-AI status --short`. If there are uncommitted local changes inside `Nievo-AI`, warn the user and do **not** discard or overwrite local work before switching/pulling. When clean:
+  ```bash
+  git submodule set-branch --branch develop Nievo-AI
+  git submodule sync -- Nievo-AI
+  git -C Nievo-AI status --short
+  git -C Nievo-AI fetch origin develop
+  git -C Nievo-AI checkout develop || git -C Nievo-AI checkout -b develop origin/develop
+  git -C Nievo-AI pull --ff-only origin develop
   ```
 
 #### 5.2 Initialize or Verify `GEMINI.md`
@@ -468,8 +498,10 @@ python3 -m json.tool .agents/plugins/nievo/mcp_config.json >/dev/null && echo "m
 find .agents -type l ! -exec test -e {} \; -print
 ls -la .agents/skills/ .agents/agents/
 
-# 4. Verify GEMINI.md directives (host project)
+# 4. Verify GEMINI.md directives and Nievo-AI submodule branch = develop (host project)
 grep -E "AI/(Start-here|Default|Rules)\.md" GEMINI.md
+git config -f .gitmodules --get submodule.Nievo-AI.branch
+git -C Nievo-AI branch --show-current
 
 # 5. Validate Docker MCP Gateway dry-run with the project secrets file (if Docker is running)
 docker mcp gateway run \
@@ -494,8 +526,10 @@ Get-Item AI -ErrorAction SilentlyContinue | Select-Object Name, LinkType, Target
 Get-ChildItem .agents\skills | Select-Object Name, LinkType, Target
 Get-ChildItem .agents\agents | Select-Object Name, LinkType, Target
 
-# 4. Verify GEMINI.md directives (host project)
+# 4. Verify GEMINI.md directives and Nievo-AI submodule branch = develop (host project)
 Select-String -Path GEMINI.md -Pattern "AI/(Start-here|Default|Rules)\.md"
+git config -f .gitmodules --get submodule.Nievo-AI.branch
+git -C Nievo-AI branch --show-current
 
 # 5. Validate Docker MCP Gateway dry-run with the project secrets file (if Docker is running)
 docker mcp gateway run `
@@ -523,6 +557,7 @@ docker mcp gateway run `
 | `docker pass has not been installed` | Ambiente Linux sem Docker Desktop / `docker pass` para keychain | Já resolvido pelo padrão do projeto usando `--catalog` + `--servers` + `--secrets "<PROJECT_ROOT>/mcp_secrets.env"` |
 | `Can't start prometheus: failed to connect` | Servidor opcional (ex.: `prometheus`) sem config local ou instância rodando | Remover da lista `--servers` ou passar `--config "<PROJECT_ROOT>/.agents/plugins/nievo/mcp_servers_config.yaml"` |
 | Risco de expor `mcp_secrets.env` ou `X-Goog-Api-Key` no Git | `.gitignore` sem as regras locais antes da geração dos arquivos | Garantir `mcp_secrets.env` e `.agents/plugins/nievo/mcp_config.json` no `.gitignore` e versionar apenas `mcp_secrets_example.txt` e `mcp_config.example.json` |
+| `Nievo-AI` em `main`, outra branch ou `HEAD detached` | Submódulo adicionado sem `-b develop` ou atualizado sem checkout na branch obrigatória | Executar `git submodule set-branch --branch develop Nievo-AI && git submodule sync -- Nievo-AI && git -C Nievo-AI fetch origin develop && git -C Nievo-AI checkout develop && git -C Nievo-AI pull --ff-only origin develop` |
 
 ---
 
@@ -535,16 +570,17 @@ docker mcp gateway run `
 5. **Preserve Existing Configurations**: Never overwrite custom rules in `GEMINI.md`, existing `mcp_secrets.env` files, or unrelated entries in `mcp_config.json`.
 6. **Do Not Duplicate GitHub MCP**: The default `--servers` list already includes `github-official`.
 7. **No Git Commits Inside `setup`**: Leave staging, `changelog.md` synchronization, commits, and pushes strictly to `git-admin` / `git-*` skills unless the user separately invokes Git delivery.
+8. **Submodule Always on `develop` Branch (Host Projects)**: Always enforce `branch = develop` in `.gitmodules` and verify `Nievo-AI` is checked out on `develop` (never `main` or another branch); check `git -C Nievo-AI status --short` first so uncommitted work inside the submodule is never discarded.
 
 ---
 
 ## 6. Verification Checklist
 
-- [ ] Read-only pre-flight inspection completed (OS, repo mode, `.gitignore`, `mcp_secrets*`, `.agents/plugins/nievo/`, Docker / `docker-mcp`, `Nievo-AI` submodule, `GEMINI.md`, symlinks).
+- [ ] Read-only pre-flight inspection completed (OS, repo mode, `.gitignore`, `mcp_secrets*`, `.agents/plugins/nievo/`, Docker / `docker-mcp`, `Nievo-AI` submodule and active branch, `GEMINI.md`, symlinks).
 - [ ] User confirmed `.agents/plugins/nievo/`, `.gitignore` entries, `mcp_secrets_example.txt` -> `mcp_secrets.env`, `nievo_ai` (`--catalog` + `--servers` + `--secrets`) + `stitch` config, `docker-mcp` install, and host onboarding actions.
 - [ ] `.gitignore` updated and verified via `git check-ignore` **before** creating `mcp_secrets.env`.
 - [ ] `mcp_secrets_example.txt` created and copied to `mcp_secrets.env` (only if absent, never reading or overwriting existing secrets).
 - [ ] `.agents/plugins/nievo/plugin.json`, `mcp_config.example.json`, and `mcp_config.json` created or safely merged with project-local `--secrets` path (`nievo_ai` + `stitch`).
 - [ ] `docker-mcp` CLI plugin installed/verified for Linux or Windows.
-- [ ] `Nievo-AI` submodule, `GEMINI.md`, and relative symlinks (`AI`, `.agents/skills/*`, `.agents/agents/*`) verified or initialized (host project).
+- [ ] `Nievo-AI` submodule verified/enforced on branch `develop` (`.gitmodules` `branch = develop` and `git -C Nievo-AI branch --show-current` == `develop`), `GEMINI.md`, and relative symlinks (`AI`, `.agents/skills/*`, `.agents/agents/*`) verified or initialized (host project).
 - [ ] JSON syntax validated, `docker mcp gateway run --catalog ... --servers ... --secrets ... --dry-run` verified (when Docker is running), and manual token fill + Antigravity UI verification steps shared with the user.

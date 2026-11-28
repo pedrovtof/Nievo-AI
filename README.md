@@ -10,19 +10,43 @@ This repository is designed to be consumed as a Git submodule (`Nievo-AI`) acros
 
 To include this repository in a new or existing NIEVO project:
 
-```bash
-# Add submodule into ./Nievo-AI directory
-git submodule add https://github.com/pedrovtof/Nievo-Skills.git ./Nievo-AI/
+> [!IMPORTANT]
+> **Regra Obrigatória (`branch = develop`)**:
+> Em todos os projetos consumidores, o submódulo `Nievo-AI` **DEVE** sempre apontar e rastrear exclusivamente a branch **`develop`** (`branch = develop` no `.gitmodules` e checkout local na branch `develop` — nunca `main` ou outra branch).
 
-# Initialize and pull submodules
+```bash
+# Add submodule into ./Nievo-AI directory tracking branch develop (mandatory)
+git submodule add -b develop https://github.com/pedrovtof/Nievo-Skills.git ./Nievo-AI/
+
+# Initialize submodules and ensure Nievo-AI is on branch develop
 git submodule update --init --recursive
+git -C Nievo-AI checkout develop
 ```
 
 > [!NOTE]
-> When cloning an existing project that already includes `Nievo-AI`, initialize submodules with:
+> When cloning an existing project that already includes `Nievo-AI`, initialize submodules and ensure the `develop` branch is active:
 > ```bash
 > git submodule update --init --recursive
+> git -C Nievo-AI checkout develop
 > ```
+
+### Enforcing `develop` on an Existing Submodule
+
+If `Nievo-AI` was previously added without `-b develop`, is on `main`, or is in `HEAD detached` state, enforce the `develop` branch tracking with:
+
+```bash
+git submodule set-branch --branch develop Nievo-AI
+git submodule sync -- Nievo-AI
+git -C Nievo-AI fetch origin develop
+git -C Nievo-AI checkout develop || git -C Nievo-AI checkout -b develop origin/develop
+git -C Nievo-AI pull --ff-only origin develop
+```
+
+### Updating the Submodule to the Latest `develop`
+
+```bash
+git -C Nievo-AI checkout develop && git -C Nievo-AI pull --ff-only origin develop
+```
 
 ---
 
@@ -257,6 +281,16 @@ To verify that all symbolic links are correctly configured and resolve without b
   Get-ChildItem .agents\agents | Select-Object Name, LinkType, Target
   ```
 
+### Submodule Branch Verification (Mandatory `develop`)
+
+Run on Linux/macOS or Windows (PowerShell) in the host project root — **both commands must output `develop`**:
+
+```bash
+# Verify Nievo-AI submodule tracks and is checked out on branch develop
+git config -f .gitmodules --get submodule.Nievo-AI.branch
+git -C Nievo-AI branch --show-current
+```
+
 ---
 
 ## 6. MCP Server (Docker MCP Gateway + Stitch) & Skill `setup`
@@ -277,7 +311,7 @@ Use the `setup` skill ([AI/GEMINI/skills/setup/setup.md](AI/GEMINI/skills/setup/
 1. **`.gitignore` Guard & Secrets Mold**: Ensures `mcp_secrets.env` and `.agents/plugins/nievo/mcp_config.json` are ignored by Git before generating `mcp_secrets_example.txt` and copying it to `mcp_secrets.env`.
 2. **Plugin-Scoped MCP Config**: Scaffolds `.agents/plugins/nievo/plugin.json`, `.agents/plugins/nievo/mcp_config.example.json`, and `.agents/plugins/nievo/mcp_config.json` (`nievo_ai` + `stitch`) pointing `--secrets` to the local project's `mcp_secrets.env`.
 3. **Docker MCP CLI Plugin**: Guides `docker-mcp` CLI plugin installation (Linux & Windows) and optional extra server / `--config` customization.
-4. **Submodule, `GEMINI.md` & Symlinks**: Initializes `./Nievo-AI/`, `GEMINI.md`, and cross-platform relative symbolic links (`AI/`, `.agents/skills/`, `.agents/agents/`), then validates everything with `--dry-run`.
+4. **Submodule, `GEMINI.md` & Symlinks**: Initializes/enforces `./Nievo-AI/` strictly on branch `develop`, `GEMINI.md`, and cross-platform relative symbolic links (`AI/`, `.agents/skills/`, `.agents/agents/`), then validates everything with `--dry-run`.
 
 ---
 
@@ -416,6 +450,7 @@ After `--dry-run` exits `0`, reload Antigravity and check **Additional Options (
 | `docker: unknown command: docker mcp` | Plugin `docker-mcp` ausente em `cli-plugins` | Instalar seguindo o **Step 6.1** (Linux ou Windows) |
 | `docker pass has not been installed` | Ambiente sem Docker Desktop / `docker pass` | Já resolvido pelo padrão do projeto passando `--catalog` + `--servers` + `--secrets "<PROJECT_ROOT>/mcp_secrets.env"` |
 | `Chave ou segredo exposto em arquivo untracked` | `.gitignore` sem as regras locais | Garantir `mcp_secrets.env` e `.agents/plugins/nievo/mcp_config.json` no `.gitignore` e versionar apenas `mcp_secrets_example.txt` e `mcp_config.example.json` |
+| `Submódulo Nievo-AI em main, outra branch ou HEAD detached` | Submódulo adicionado sem `-b develop` ou atualizado fora da branch obrigatória | Executar `git submodule set-branch --branch develop Nievo-AI && git submodule sync -- Nievo-AI && git -C Nievo-AI fetch origin develop && git -C Nievo-AI checkout develop && git -C Nievo-AI pull --ff-only origin develop` |
 
 ### Git Skills & Official GitHub MCP Integration
 
