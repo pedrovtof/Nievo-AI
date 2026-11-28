@@ -1,6 +1,6 @@
 ---
 name: documentation-orchestrator
-description: Master index and orchestrator for inspecting branch changes, finding corresponding references in Documentation/config/docs, updating affected diagrams, and creating new documentation files when missing.
+description: Master index and orchestrator for inspecting branch changes, finding corresponding references in Documentation/config/docs, updating affected diagrams, synchronizing new/modified HTTP endpoints to Postman via MCP (creation-only), and creating new documentation files when missing.
 ---
 
 # Documentation Orchestrator & Master Index
@@ -23,8 +23,11 @@ flowchart TD
     D -- "Yes" --> E["4A. Selective Update: Update only impacted diagrams/sections"]
     D -- "No" --> F["4B. Create File: Scaffold new doc markdown and diagram"]
     F --> G["5. Register in Documentation/config/mkdocs.yml nav"]
-    E --> H["6. Verify Syntax & Links"]
-    G --> H
+    E --> P{"HTTP Endpoints Changed?"}
+    G --> P
+    P -- "Yes" --> PM["6A. Sync Postman via postman.md (Creation-Only, No Execution)"]
+    P -- "No" --> H["7. Verify Syntax, Links & Postman Hierarchy"]
+    PM --> H
 ```
 
 ### Step 1: Inspect Current Branch & Changes
@@ -45,10 +48,11 @@ git diff main...HEAD --name-only
 ### Step 2: Categorize Changed Code Components
 Inspect the diff and map every changed element to its corresponding diagram domain:
 
-| Changed Component Type | Target Skill | Target Diagram Type |
+| Changed Component Type | Target Skill | Target Diagram / Artifact Type |
 | :--- | :--- | :--- |
 | Backend Classes, Interfaces, Entities, Services, Repositories | [class-diagram.md](./mermaid/class-diagram.md) | Mermaid `classDiagram` |
 | REST Endpoints, HTTP Controllers, Route Handlers | [sequence-diagram.md](./mermaid/sequence-diagram.md) | Mermaid `sequenceDiagram` |
+| REST / HTTP Endpoints (Localhost + `cURL` + `/testes/`) | [postman.md](./postman/postman.md) | Postman Workspace, `./<Module>/<route>` (`success` & `/testes/` via MCP, creation-only) |
 | Background Workers, Queue Consumers, Cron Jobs | [sequence-diagram.md](./mermaid/sequence-diagram.md) | Mermaid `sequenceDiagram` |
 | Database Migrations, Models, Tables, Columns, Relations | [diagram.md](./dbdiagram/diagram.md) | DBML / dbdiagram.io |
 | Use Cases, User Journeys, Actor Permissions | [use-case-diagram.md](./mermaid/use-case-diagram.md) | Mermaid `flowchart LR` |
@@ -157,3 +161,5 @@ Before completing documentation tasks, confirm:
 - [ ] Created new documentation files for previously undocumented components.
 - [ ] Verified `Documentation/config/mkdocs.yml` contains navigation entries for any new files.
 - [ ] Verified all diagram blocks have valid Mermaid or DBML syntax without unescaped characters.
+- [ ] Synchronized any newly created or modified HTTP endpoints via [postman.md](./postman/postman.md) (`LOCAL` Postman environment only, `success` + `/testes/` via Postman MCP or JSON/`cURL` fallback), strictly without executing requests.
+- [ ] Never read any standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`); inspect only `.env-example` / `.env.example` / `env-example.txt` / `mcp_secrets_example.txt` templates when needed.

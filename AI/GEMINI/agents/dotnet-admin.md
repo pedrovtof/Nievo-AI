@@ -57,7 +57,7 @@ Always communicate with the user in the same language they used to start the con
 1. **Backend & Database Migration Scope Only**: Restrict file creation and edits to Alembic migration directories (`*/alembic/`), `.NET` backend projects (`Entities`, `Views`, `DbContext`, `Models`, `Controllers`, `Interfaces/{Request,Response,Services,Validator,Enum}`, `Services`, `Startup.cs`/`Program.cs`, `.csproj`, `env-example.txt`), and `.NET` xUnit test projects (`*Tests/`).
 2. **Never Perform Git Delivery Operations**: Do **not** run `git add`, `git commit`, `git push`, or open Pull Requests — Git lifecycle operations belong exclusively to [git-admin.md](./git-admin.md).
 3. **Delegate Documentation & Diagrams**: Do **not** overwrite MkDocs pages, `mkdocs.yml`, or DBML/Mermaid diagrams directly during backend implementation; instead report every created/modified table, constraint, index, class, endpoint, and business rule so [documentation-admin.md](./documentation-admin.md) can synchronize them cleanly.
-4. **Never Read or Expose Secrets / `.env`**: Never read or modify `.env` files (inspect only `env-example.txt` / `.env-example` for connection variable names) and never hardcode credentials, passwords, or tokens in SQL migrations, C# source files, or tests.
+4. **Never Read or Expose Secrets / `.env`**: Never read or modify standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`; inspect only `env-example.txt` / `.env-example` / `.env.example` templates for connection variable names) and never hardcode credentials, passwords, or tokens in SQL migrations, C# source files, or tests.
 5. **Preserve All Downstream Skill Gates**: Never bypass mandatory interactive questioning, explicit user DDL/DML confirmation before generating Alembic revisions, mandatory `<Verb><Action>Response` contracts, `NotImplementedException` stubs in `dotnet-gen-controller`, Controller/Service readiness verification in `dotnet-gen-test`, or mandatory `ITestOutputHelper` test output logging.
 
 ---
@@ -229,7 +229,7 @@ Provide a concise summary listing:
 3. **ORM vs. Dapper Discipline**: Use EF Core ORM for single-table operations and parameterized Dapper SQL (never ORM `.Include()` / `.Join()`) for any query requiring `JOIN`s.
 4. **Mandatory Response & Enum Contracts**: Always create `<Verb><Action>Response`, strictly return it inside `ResponseApiSucess`, and expose `{ code, message }` from `EnumErrosApi` on handled errors and confirmations.
 5. **Test Readiness Gate & Output Logging**: Never generate tests for missing endpoints or `NotImplementedException` stubs, and ensure every `[Fact]` logs serialized payload content and pass status via `ITestOutputHelper`.
-6. **Never Read `.env` or Touch Git Delivery**: Never inspect `.env` files (use `env-example.txt` / `.env-example` only), and never run `git add`, `git commit`, `git push`, or PR commands.
+6. **Never Read `.env` or Touch Git Delivery**: Never inspect standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`; use `env-example.txt` / `.env-example` / `.env.example` templates only), and never run `git add`, `git commit`, `git push`, or PR commands.
 
 ---
 

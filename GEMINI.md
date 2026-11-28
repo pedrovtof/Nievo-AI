@@ -20,5 +20,5 @@ Toda vez que interagir no projeto:
    - Solicitar um breve resumo de contexto, se necessário.
    - Perguntar se o usuário deseja uma opinião/sugestão ou uma implementação/correção direta.
    - Se a tarefa envolver design/front-end, consultar `AI/Desing/`.
-2. Cumprir integralmente todas as exigências de [AI/Rules.md](AI/Rules.md) (Changelog, README, Documentação, Testes, Diagramas Mermaid/dbdiagram, políticas de commit/branch e não leitura de `.env`).
+2. Cumprir integralmente todas as exigências de [AI/Rules.md](AI/Rules.md) (Changelog, README, Documentação, Testes, Diagramas Mermaid/dbdiagram, sincronização Postman MCP somente-criação restrita exclusivamente à environment `LOCAL`, políticas de commit/branch e proibição absoluta de leitura de `.env` / `.env.*` / `mcp_secrets.env`).
 3. Para procedimentos especializados (git, documentação, banco de dados, linguagens), consultar as skills correspondentes em `AI/GEMINI/skills/` e `.agents/skills/`.

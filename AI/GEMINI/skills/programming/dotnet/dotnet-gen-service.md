@@ -176,6 +176,7 @@ if (!validatorResult.IsValid)
 5. **Short-Circuit Empty Datasets**: Return `Ok(new ResponseApiSucess(new ResponsePaginationBase<<Verb><Action>Response>(page, pageSize, 0, new())))` immediately when a paginated query yields no rows—skip mapping allocations.
 6. **True Asynchronous Execution**: Use `await` end-to-end; never block threads with `.Result`, `.Wait()`, or `Task.Run` wrappers around async I/O.
 7. **Reuse & Decompose**: Keep service methods concise and readable; extract repeated lookup/cache/mapping blocks into private helper methods or lower-layer Model methods.
+8. **Never Read `.env` or Hardcode Secrets**: Never read standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env` — inspect only `.env-example` / `.env.example` / `env-example.txt` templates if needed), and never hardcode secrets or tokens in services.
 
 ---
 
@@ -189,3 +190,4 @@ if (!validatorResult.IsValid)
 - [ ] Cache-Aside and Origin/Replica separation applied where appropriate, with zero N+1 queries.
 - [ ] Missing Entities/Views/Models triggered `dotnet-gen-entity`; new dependencies registered in `Startup.cs`.
 - [ ] `dotnet build` passes cleanly, and `dotnet-gen-test` is invoked next to verify every handled return.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero hardcoded secrets.

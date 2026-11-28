@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "nievo_ai": {
+      "command": "docker",
+      "args": [
+        "mcp",
+        "gateway",
+        "run",
+        "--catalog",
+        "https://desktop.docker.com/mcp/catalog/v3/catalog.yaml",
+        "--servers",
+        "brave,github-official,postman,gemini-api-docs,docker-docs,javadocs,terraform",
+        "--secrets",
+        "<PROJECT_ROOT>/mcp_secrets.env"
+      ]
+    },
+    "stitch": {
+      "type": "http",
+      "url": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "<SUA_CHAVE_API_STITCH>"
+      }
+    }
+  }
+}

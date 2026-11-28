@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 ### Changelog
 
+2026-11-27 - [SEC] - Enforce LOCAL-only Postman environment reads and universal .env prohibition across all skills and agents
+
+Detalhes:
+
+- Restrict AI/GEMINI/skills/documentation/postman/postman.md and AI/GEMINI/agents/documentation-admin.md strictly to reading/updating only the Postman LOCAL environment (never inspecting or mutating DEV, QA, STAGING, PROD, or any non-LOCAL Postman environment) - pedrovotf - 2026-11-27 - N/A - PENDING
+- Enforce explicit prohibition against reading standard project .env files (.env, .env.local, .env.development, .env.staging, .env.production, .env.*, mcp_secrets.env) across all 25 skill and agent files, AI/Rules.md, GEMINI.md, and README.md - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [CHG] - Add LOCAL environment and reusable variable standards to postman skill
+
+Detalhes:
+
+- Update AI/GEMINI/skills/documentation/postman/postman.md to auto-create and non-destructively merge a workspace LOCAL Postman environment (via getEnvironments, getEnvironment, createEnvironment, putEnvironment/updateEnvironment) for reusable variables (host_<module>, host_port_<module>, bearer_token_<module>, default_page, default_page_size) while keeping endpoint-specific values literal - pedrovotf - 2026-11-27 - N/A - PENDING
+- Synchronize LOCAL environment and reusable variable rules across AI/GEMINI/agents/documentation-admin.md, AI/Rules.md, and README.md - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [NEW] - Add postman skill for MCP endpoint collection sync and integrate into documentation workflow
+
+Detalhes:
+
+- Add canonical postman skill in AI/GEMINI/skills/documentation/postman/postman.md with creation-only Postman MCP workflow (auto-creating project workspace, language-agnostic ./<Module>/<endpoint-path> hierarchy, localhost + cURL success requests with non-idempotency notes, and /testes/ ENUM-driven error_<enum_name>_<status> and stress_<scenario>_<status> items without executing requests) - pedrovotf - 2026-11-27 - N/A - PENDING
+- Register relative symbolic link .agents/skills/postman/SKILL.md -> ../../../AI/GEMINI/skills/documentation/postman/postman.md - pedrovotf - 2026-11-27 - N/A - PENDING
+- Integrate postman into documentation-orchestrator (AI/GEMINI/skills/documentation/documentation.md), documentation-admin (AI/GEMINI/agents/documentation-admin.md), nievo-orchestrator, git-pull-request, AI/Rules.md, GEMINI.md, and README.md - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [CHG] - Configure git skills and git-admin for Official GitHub MCP compatibility
+
+Detalhes:
+
+- Update git-branch, git-commit, git-push-request, and git-pull-request skills in AI/GEMINI/skills/git/ with Official GitHub MCP (github-official via nievo_ai Docker MCP Gateway) capability mappings, strict local-vs-MCP safety boundaries, and gh CLI / manual fallbacks - pedrovotf - 2026-11-27 - N/A - PENDING
+- Align AI/GEMINI/agents/git-admin.md with canonical Official GitHub MCP tool names, nievo_ai Docker MCP Gateway references, and corrected .agents/skills/ symlink paths - pedrovotf - 2026-11-27 - N/A - PENDING
+- Document Git skills Official GitHub MCP compatibility matrix in README.md - pedrovotf - 2026-11-27 - N/A - PENDING
+
+2026-11-27 - [CHG] - Refactor setup skill for Linux/Windows project-scoped MCP mold, Docker MCP Gateway catalog + servers + secrets, and stitch
+
+Detalhes:
+
+- Add canonical project-scoped MCP templates in AI/GEMINI/skills/setup/templates/ (mcp_secrets_example.txt, plugin.json, and mcp_config.example.json) using --catalog + --servers + project-local --secrets and postman.postman-api-key to avoid docker-mcp v0.44.3+ --profile vs --secrets mutual exclusion - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update AI/GEMINI/skills/setup/setup.md to run MCP mold creation first (preparing .gitignore before copying mcp_secrets_example.txt to mcp_secrets.env, scaffolding .agents/plugins/nievo/, and configuring docker-mcp CLI with --catalog, --servers, and project-local --secrets on Linux and Windows strictly at project scope) - pedrovotf - 2026-11-27 - N/A - PENDING
+- Update README.md with Linux and Windows project-scoped MCP setup (--catalog + --servers + --secrets), .gitignore protection, mcp_secrets_example.txt to mcp_secrets.env flow, .agents/plugins/nievo/ config, troubleshooting, and ln -sfn directory symlink fix - pedrovotf - 2026-11-27 - N/A - PENDING
+
 2026-11-27 - [NEW] - Add setup skill for full NIEVO onboarding and plugin-scoped MCP configuration
 
 Detalhes:

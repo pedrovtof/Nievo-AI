@@ -254,6 +254,7 @@ Run `dotnet build` against the backend solution/project and confirm zero build e
 - Implement the service business rules and validation using `dotnet-gen-service` ([dotnet-gen-service.md](./dotnet-gen-service.md)), which must strictly honor the generated `<Verb><Action>Response` contract.
 - Once both Controller and Service are implemented, generate controller and service tests using `dotnet-gen-test` ([dotnet-gen-test.md](./dotnet-gen-test.md)).
 - Update API sequence diagrams in documentation following [sequence-diagram.md](../../documentation/mermaid/sequence-diagram.md).
+- **Never read `.env` files**: Never read standard project `.env` files (`.env`, `.env.local`, `.env.development`, `.env.staging`, `.env.production`, `.env.*`, `mcp_secrets.env`); inspect only `.env-example` / `.env.example` / `env-example.txt` templates when needed, and never hardcode secrets in controllers or DTOs.
 
 ---
 
@@ -265,3 +266,4 @@ Run `dotnet build` against the backend solution/project and confirm zero build e
 - [ ] Concrete `<Context>Service` stub created/updated throwing `NotImplementedException` (no business logic implemented here).
 - [ ] DI registration added to `Startup.cs` and any required NuGet/project references added.
 - [ ] `dotnet build` succeeds cleanly.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero hardcoded credentials.

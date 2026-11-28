@@ -138,6 +138,7 @@ flowchart LR
 2. **Direction**: Use `flowchart LR` (Left to Right) for clear visual separation: primary actors on the left, system boundary in the center, secondary/external systems on the right.
 3. **MkDocs Safety**:
    - Always quote labels containing brackets, quotes, or special characters: `uc_ext -.->|"<<extend>>"| uc_base`.
+4. **Never Read `.env` or Expose Secrets**: Never read standard project `.env` files (`.env`, `.env.local`, `.env.*`, `mcp_secrets.env` — inspect only `.env-example` / `.env.example` / `env-example.txt` templates if needed) and never include real credentials in diagrams.
 
 ## 7. Verification Checklist
 
@@ -147,3 +148,4 @@ flowchart LR
 - [ ] Actors are placed outside the system boundary.
 - [ ] `<<include>>` and `<<extend>>` labels use quoted syntax `|"<<include>>"|` or `|"<<extend>>"|`.
 - [ ] Relationships reflect business value and goals rather than implementation code details.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero real secrets exposed.

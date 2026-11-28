@@ -240,7 +240,7 @@ TableGroup compliance {
 1. **Keep Schema in Sync**: Any database migration (e.g. Alembic, Prisma, Flyway, Knex, or raw SQL migrations) must be accompanied by an update to `Documentation/config/docs/database/schema.dbml`.
 2. **Deterministic Naming**: Indexes and foreign keys must have explicit, predictable names (`idx_<table>_<column>`, `fk_<table>_<target>`).
 3. **Descriptive Comments**: Add `note:` on non-obvious business columns (e.g. status flags, JSON payload shapes, soft-delete fields).
-4. **No Sensitive Data**: Never put credentials, seeds with real passwords, or private encryption keys in diagram files.
+4. **No Sensitive Data or `.env` Reads**: Never put credentials, seeds with real passwords, or private encryption keys in diagram files, and **never** read standard project `.env` files (`.env`, `.env.local`, `.env.*`, `mcp_secrets.env` — inspect only `.env-example` / `.env.example` / `env-example.txt` templates if needed).
 5. **Query Performance**: Regularly review index definitions and foreign key relationships to ensure optimal query performance for common access patterns.
 
 ## 6. Verification Checklist
@@ -250,3 +250,4 @@ TableGroup compliance {
 - [ ] Foreign keys and relationships (`Ref: ...`) have cardinality and cascade rules.
 - [ ] Custom enums defined for all discrete status/role columns.
 - [ ] TableGroups organized by domain context.
+- [ ] Zero `.env` / `.env.*` / `mcp_secrets.env` files read and zero real secrets exposed.
